@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './styles/CardStyles.css';
+import {Card_horizontal, Card_vertical} from './constants/Style';
 
 const SUIT_CLUBS = 'c';
 const SUIT_DIAMONDS = 'd';
@@ -25,33 +26,49 @@ export default class Card extends React.Component {
   }
 
   render() {
-    console.log(this.name);
-    console.log((10*this.props.zindex).toString() + 'px');
     let cardimg = this.props.faceup ?
      require('./cardimages/'+this.value.toString()+this.props.suit.toUpperCase()+'.png')
      : require('./cardimages/back_card.gif');
-
-    return (
-      <div style={{
-        boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-        boxSizing: 'border-box',
-        color: '#FF5722',
-        position: 'absolute',
-        left: (30*this.props.zindex).toString() + 'px',
-        padding: 0,
-        width: "140px",
-        height: '200px',
-        zIndex: this.props.zindex,
-      }}>
-        <img
-          src={cardimg}
-          onClick={()=>{console.log('hi ' + this.name);
-                        this.props.onClick(this.props.rank, this.props.suit);}}
-          width="140px"
-          height="200px"
-          alt="the card was supposed to show up"
-        />
-      </div>
+    return (this.props.direction === 'horizontal' ? (
+        <div style={{
+          position: 'absolute',
+          left: (30*this.props.zindex).toString() + 'px',
+          padding: 0,
+          width: 140,
+          height: 200,
+          zIndex: this.props.zindex,
+          border: '1px solid #0000DA',
+        }}>
+          <img
+            src={cardimg}
+            onClick={()=>{console.log('hi ' + this.name);
+                          this.props.onClick(this.props.rank, this.props.suit);}}
+            width={140}
+            height={200}
+            alt="the card was supposed to show up"
+          />
+        </div>
+      ) :
+      (
+        <div style={{
+          position: 'absolute',
+          left: (30*this.props.zindex).toString() + 'px',
+          padding: 0,
+          width: 140,
+          height: 200,
+          zIndex: this.props.zindex,
+          border: '1px solid #000000',
+        }}>
+          <img
+            src={cardimg}
+            onClick={()=>{console.log('hi ' + this.name);
+                          this.props.onClick(this.props.rank, this.props.suit);}}
+            width={140}
+            height={200}
+            alt="the card was supposed to show up"
+          />
+        </div>
+      )
     );
   }
 }

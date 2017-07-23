@@ -3,6 +3,7 @@ import Card, {VALID_SUITS} from './Card';
 import BridgeHand from './BridgeHand';
 import Deck from './Deck';
 import GameBoard from './GameBoard';
+import {SEAT_NORTH, SEAT_SOUTH, SEAT_EAST, SEAT_WEST} from './Player';
 
 class App extends Component {
   render() {
@@ -21,11 +22,13 @@ class App extends Component {
     const hands=d.generateHands();
     return (
       <div style={{
-        backgroundColor: 'green',
+        backgroundColor: 'red',
         width: '100%',
         height: '100%',
       }}>
-        <GameBoard/>
+        <GameBoard
+          dealer={SEAT_NORTH}
+        />
       </div>
     )
 
