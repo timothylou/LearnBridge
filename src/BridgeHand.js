@@ -29,8 +29,12 @@ export default class BridgeHand extends React.Component {
     this.setState({ cards: newcardlist } );
   }
   onCardClick(crank, csuit) {
-    console.log('Card ' + crank + ' of ' + csuit + ' clicked!');
-    this.removeCard({rank: crank, suit: csuit});
+    console.log('BridgeHand: Card ' + crank + ' of ' + csuit + ' clicked!');
+    if (this.props.isValidCardClick({rank: crank, suit: csuit}, this.props.seat,
+      this.state.cards)) {
+        this.props.onValidCardClick({rank: crank, suit: csuit}, this.props.seat);
+        this.removeCard({rank: crank, suit: csuit});
+    }
   }
   sort(trumpsSuit) {
     let sortedcards = [];
@@ -82,13 +86,10 @@ export default class BridgeHand extends React.Component {
             key={card.suit+card.rank}
             onClick={this.onCardClick}
             faceup={this.props.faceup}
+            direction={this.props.direction}
           />
       );
     });
-    console.log(this.state.cards.length);
-    console.log(reactcardslist.length);
-    console.log(this.state.cards);
-    console.log(reactcardslist);
     return (
       <div style={{
         height: '200px',

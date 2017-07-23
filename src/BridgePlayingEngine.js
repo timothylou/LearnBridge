@@ -3,9 +3,12 @@ import Card, {VALID_RANKS, VALID_SUITS, RANK_VALUE_MAP} from './Card';
 
 
 export default class BridgePlayingEngine {
-  constructor(trumpsSuit) {
+  constructor() {
     this.curTrickCards = []; // each elem: {card: cardObject, player: SEAT_XXXX}
-    this.trumpsSuit = trumpsSuit;
+    this.trumpsSuit = null;
+  }
+  setTrumpSuit(trumpSuit) {
+    this.trumpsSuit = trumpSuit;
   }
   reset() {  // call this after every getRoundWinner
     this.curTrickCards = [];
@@ -23,6 +26,7 @@ export default class BridgePlayingEngine {
   playCard(card, player) {  // need to call isValidCard and isTrickOver before playCard
     this.curTrickCards.push({
       card: card,
+      cardvalue: RANK_VALUE_MAP[card.rank],
       player: player
     });
   }
@@ -32,27 +36,30 @@ export default class BridgePlayingEngine {
   getRoundWinner() {  // call isTrickOver before getRoundWinner
     const trickLeadingCardSuit = this.curTrickCards[0].card.suit;
     let maxCard = this.curTrickCards[0];
-    let foundTrump = (trickLeadingCardSuit == this.trumpsSuit);
+    let foundTrump = (trickLeadingCardSuit === this.trumpsSuit);
     for (let i=1; i < 4; i++) {
+      console.log(this.curTrickCards[i]);
       if (foundTrump) {
-        if (this.curTrickCards[i].card.suit == this.trumpsSuit &&
-        this.curTrickCards[i].card.value > maxCard.card.value) {
+        if (this.curTrickCards[i].card.suit === this.trumpsSuit &&
+        this.curTrickCards[i].cardvalue > maxCard.cardvalue) {
           maxCard = this.curTrickCards[i];
         }
       }
       else {
-          if (this.curTrickCards[i].card.suit == this.trumpsSuit) {
+          if (this.curTrickCards[i].card.suit === this.trumpsSuit) {
             foundTrump = true;
             maxCard = this.curTrickCards[i];
           }
           else {
-            if (this.curTrickCards[i].card.suit == trickLeadingCardSuit &&
-              this.curTrickCards[i].value > maxCard.card.value) {
+            if (this.curTrickCards[i].card.suit === trickLeadingCardSuit &&
+              this.curTrickCards[i].cardvalue > maxCard.cardvalue) {
                 maxCard = this.curTrickCards[i];
             }
           }
       }
     }
+    console.log(foundTrump);
+    console.log(maxCard);
     return maxCard.player;
   }
 }
