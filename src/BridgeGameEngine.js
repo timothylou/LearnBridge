@@ -13,8 +13,8 @@ export default class BridgeGameEngine {
     this.playEngine = new BridgePlayingEngine();
     // for debug:
     this.playEngine.setTrumpSuit('h');
-    this.trickswon_NS = 0;
-    this.trickswon_EW = 0;
+    this.trickswon_NS = 0; // maybe can just store this in GameBoard
+    this.trickswon_EW = 0; // maybe can just store this in GameBoard
   }
 
   isValidCard(card, cardsInHand) {

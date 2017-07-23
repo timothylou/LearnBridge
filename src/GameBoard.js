@@ -19,7 +19,7 @@ export default class GameBoard extends React.Component {
       eastHand: hands[1],
       southHand: hands[2],
       westHand: hands[3],
-      cardsOnTable: new Array(),
+      cardsOnTable: [],
       whoseTurn: this.props.dealer,
     };
     this.bridgeEngine = new BridgeGameEngine(this.props.dealer);
