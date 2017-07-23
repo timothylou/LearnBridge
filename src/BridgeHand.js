@@ -20,7 +20,7 @@ export default class BridgeHand extends React.Component {
     return this.state.cards;
   }
   removeCard(card) {
-    let newcardlist = new Array();
+    let newcardlist = [];
     for (let i=0; i < this.state.cards.length; i++) {
       if (this.state.cards[i].suit !== card.suit || this.state.cards[i].rank !== card.rank) {
         newcardlist.push(this.state.cards[i]);

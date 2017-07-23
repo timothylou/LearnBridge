@@ -14,12 +14,12 @@ export default class BridgePlayingEngine {
     this.curTrickCards = [];
   }
   isValidCard(card, cardsInHand) { //cardsInHand is a list of cardObjects
-    if (this.curTrickCards.length == 0) return true;
+    if (this.curTrickCards.length === 0) return true;
     const trickLeadingCardSuit = this.curTrickCards[0].card.suit;
-    if (card.suit == trickLeadingCardSuit) return true;
+    if (card.suit === trickLeadingCardSuit) return true;
     // check if hand contains a card with same suit as trickLeadingCardSuit
     for (let i=0; i < cardsInHand.length; i++) {
-      if (cardsInHand[i].suit == trickLeadingCardSuit) return false;
+      if (cardsInHand[i].suit === trickLeadingCardSuit) return false;
     }
     return true;
   }
@@ -31,7 +31,7 @@ export default class BridgePlayingEngine {
     });
   }
   isTrickOver() {
-    return (this.curTrickCards.length == 4);
+    return (this.curTrickCards.length === 4);
   }
   getRoundWinner() {  // call isTrickOver before getRoundWinner
     const trickLeadingCardSuit = this.curTrickCards[0].card.suit;

@@ -23,6 +23,9 @@ export default class Card extends React.Component {
     console.log(props);
     this.value = RANK_VALUE_MAP[this.props.rank];
     this.name = this.props.rank + " of " + this.props.suit;
+    this.state = {
+      hover: false,
+    };
   }
 
   render() {
@@ -33,6 +36,7 @@ export default class Card extends React.Component {
         <div style={{
           position: 'absolute',
           left: (30*this.props.zindex).toString() + 'px',
+          transform: (this.state.hover ? 'translate(0,-10px)' : ''),
           padding: 0,
           width: 140,
           height: 200,
@@ -43,6 +47,8 @@ export default class Card extends React.Component {
             src={cardimg}
             onClick={()=>{console.log('hi ' + this.name);
                           this.props.onClick(this.props.rank, this.props.suit);}}
+            onMouseOver={()=>{console.log('mouseover'); this.setState({hover: true});}}
+            onMouseLeave={()=>{console.log('mouseleave'); this.setState({hover: false});}}
             width={140}
             height={200}
             alt="the card was supposed to show up"
@@ -53,6 +59,7 @@ export default class Card extends React.Component {
         <div style={{
           position: 'absolute',
           left: (30*this.props.zindex).toString() + 'px',
+          transform: (this.state.hover ? 'translate(0,10px)' : ''),
           padding: 0,
           width: 140,
           height: 200,
@@ -63,6 +70,8 @@ export default class Card extends React.Component {
             src={cardimg}
             onClick={()=>{console.log('hi ' + this.name);
                           this.props.onClick(this.props.rank, this.props.suit);}}
+            onMouseOver={()=>{console.log('mouseover'); this.setState({hover: true});}}
+            onMouseLeave={()=>{console.log('mouseleave'); this.setState({hover: false});}}
             width={140}
             height={200}
             alt="the card was supposed to show up"
