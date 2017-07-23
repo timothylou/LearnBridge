@@ -21,7 +21,7 @@ class App extends Component {
     const hands=d.generateHands();
     return (
       <div style={{
-        backgroundColor: 'green',
+        backgroundColor: 'red',
         width: '100%',
         height: '100%',
       }}>
