@@ -14,13 +14,19 @@ export default class GameBoard extends React.Component {
     d.shuffle();
     const hands = d.generateHands();
     this.state = {
-      width: '0', height: '0',
+      wwidth: '0', wheight: '0',
       northHand: hands[0],
       eastHand: hands[1],
       southHand: hands[2],
       westHand: hands[3],
       cardsOnTable: [],
       whoseTurn: this.props.dealer,
+      trickswon_NS: 0,
+      trickswon_EW: 0,
+      numCardsPlayedN: 0,  // this is really just so we can recenter the cards
+      numCardsPlayedS: 0,
+      numCardsPlayedE: 0,
+      numCardsPlayedW: 0,
     };
     this.bridgeEngine = new BridgeGameEngine(this.props.dealer);
 
@@ -30,10 +36,14 @@ export default class GameBoard extends React.Component {
   }
 
   _nextPlayersTurn() {
-    if (this.state.whoseTurn === SEAT_NORTH) this.setState({whoseTurn: SEAT_EAST});
-    else if (this.state.whoseTurn === SEAT_EAST) this.setState({whoseTurn: SEAT_SOUTH});
-    else if (this.state.whoseTurn === SEAT_SOUTH) this.setState({whoseTurn: SEAT_WEST});
-    else if (this.state.whoseTurn === SEAT_WEST) this.setState({whoseTurn: SEAT_NORTH});
+    if (this.state.whoseTurn === SEAT_NORTH)
+      this.setState({whoseTurn: SEAT_EAST, numCardsPlayedN: this.state.numCardsPlayedN+1});
+    else if (this.state.whoseTurn === SEAT_EAST)
+      this.setState({whoseTurn: SEAT_SOUTH, numCardsPlayedE: this.state.numCardsPlayedE+1});
+    else if (this.state.whoseTurn === SEAT_SOUTH)
+      this.setState({whoseTurn: SEAT_WEST, numCardsPlayedS: this.state.numCardsPlayedS+1});
+    else if (this.state.whoseTurn === SEAT_WEST)
+      this.setState({whoseTurn: SEAT_NORTH, numCardsPlayedW: this.state.numCardsPlayedW+1});
   }
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -44,7 +54,17 @@ export default class GameBoard extends React.Component {
     this.bridgeEngine.playCard(card, seat);
     if (this.bridgeEngine.isTrickOver()) {
       const winner = this.bridgeEngine.getRoundWinner();
-      this.setState({whoseTurn: winner});
+      const trickNS = this.bridgeEngine.getNSScore();
+      const trickEW = this.bridgeEngine.getEWScore();
+      this.setState({
+        whoseTurn: winner,
+        trickswon_NS: trickNS,
+        trickswon_EW: trickEW,
+        numCardsPlayedN: trickNS+trickEW,
+        numCardsPlayedS: trickNS+trickEW,
+        numCardsPlayedE: trickNS+trickEW,
+        numCardsPlayedW: trickNS+trickEW,
+      });
       this.bridgeEngine.clearBoard();
       console.log('GameBoard: winner of round was: ' + winner);
     }
@@ -69,9 +89,9 @@ export default class GameBoard extends React.Component {
     window.removeEventListener('resize',this.updateWindowDimensions);
   }
   updateWindowDimensions() {
-    this.setState({width: window.innerWidth, height: window.innerHeight });
-    console.log('width' + this.state.width.toString());
-    console.log('height' + this.state.height.toString());
+    this.setState({wwidth: window.innerWidth, wheight: window.innerHeight });
+    console.log('win width: ' + this.state.wwidth.toString());
+    console.log('win height: ' + this.state.wheight.toString());
   }
   render() {
 
@@ -81,24 +101,29 @@ export default class GameBoard extends React.Component {
           position: 'absolute',
           top: '5%',
           left: '50%',
-          marginLeft: '-10%',
+          height: 200+10,
+          width: (140+30*12)+6,
+          marginLeft: '-25%',
           border: '3px solid #FF0000',
         }}>
           <BridgeHand
             rawcardslist={this.state.northHand}
             trumpSuit='h'
             seat={SEAT_NORTH}
-            faceup={true}
+            faceup={false}
             direction={'horizontal'}
+            offsetFromLeft={15*this.state.numCardsPlayedN}
             onValidCardClick={this.onValidCardClick}
             isValidCardClick={this.isValidCardClick}
           />
         </div>
         <div style={{
           position: 'absolute',
-          bottom: '1%',
+          bottom: '20%',
           left: '50%',
-          marginLeft: '-10%',
+          height: 200+10,
+          width: (140+30*12)+6,
+          marginLeft: '-25%',
           border: '3px solid #FF0000',
         }}>
           <BridgeHand
@@ -107,6 +132,7 @@ export default class GameBoard extends React.Component {
             seat={SEAT_SOUTH}
             faceup={true}
             direction={'horizontal'}
+            offsetFromLeft={15*this.state.numCardsPlayedS}
             onValidCardClick={this.onValidCardClick}
             isValidCardClick={this.isValidCardClick}
           />
@@ -114,8 +140,10 @@ export default class GameBoard extends React.Component {
         <div style={{
           position: 'absolute',
           bottom: '50%',
-          right: '10%',
-          marginLeft: '0',
+          right: '25%',
+          height: 200+10,
+          width: (140+30*12)+6,
+          marginLeft: '0%',
           border: '3px solid #FF0000',
           transform: 'rotate(0deg)',
         }}>
@@ -123,8 +151,9 @@ export default class GameBoard extends React.Component {
             rawcardslist={this.state.eastHand}
             trumpSuit='h'
             seat={SEAT_EAST}
-            faceup={true}
+            faceup={false}
             direction={'vertical'}
+            offsetFromLeft={15*this.state.numCardsPlayedE}
             onValidCardClick={this.onValidCardClick}
             isValidCardClick={this.isValidCardClick}
           />
@@ -132,7 +161,9 @@ export default class GameBoard extends React.Component {
         <div style={{
           position: 'absolute',
           bottom: '50%',
-          left: '10%',
+          left: '1%',
+          height: 200+10,
+          width: (140+30*12)+6,
           marginLeft: '0',
           border: '3px solid #FF0000',
           transform: 'rotate(0deg)',
@@ -141,8 +172,9 @@ export default class GameBoard extends React.Component {
             rawcardslist={this.state.westHand}
             trumpSuit='h'
             seat={SEAT_WEST}
-            faceup={true}
+            faceup={false}
             direction={'vertical'}
+            offsetFromLeft={15*this.state.numCardsPlayedW}
             onValidCardClick={this.onValidCardClick}
             isValidCardClick={this.isValidCardClick}
           />

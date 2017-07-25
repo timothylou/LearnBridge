@@ -87,11 +87,14 @@ export default class BridgeHand extends React.Component {
             onClick={this.onCardClick}
             faceup={this.props.faceup}
             direction={this.props.direction}
+            offsetFromLeft={this.props.offsetFromLeft}
           />
       );
     });
     return (
       <div style={{
+        position: 'absolute',
+        bottom: 0,
         height: '200px',
         width: (140+30*(this.state.cards.length-1)).toString() + 'px',
         border: '3px solid #73AD21',

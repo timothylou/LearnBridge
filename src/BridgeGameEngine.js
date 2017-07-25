@@ -40,8 +40,11 @@ export default class BridgeGameEngine {
     this.playEngine.reset();
   }
 
-  getScore() {
-    return 0;
+  getNSScore() {
+    return this.trickswon_NS;
+  }
+  getEWScore() {
+    return this.trickswon_EW;
   }
 
 

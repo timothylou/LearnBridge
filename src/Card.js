@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './styles/CardStyles.css';
-import {Card_horizontal, Card_vertical} from './constants/Style';
+import {Card_h, Card_v} from './constants/Style';
 
 const SUIT_CLUBS = 'c';
 const SUIT_DIAMONDS = 'd';
@@ -29,17 +29,19 @@ export default class Card extends React.Component {
   }
 
   render() {
-    let cardimg = this.props.faceup ?
+    const cardimg = this.props.faceup ?
      require('./cardimages/'+this.value.toString()+this.props.suit.toUpperCase()+'.png')
      : require('./cardimages/back_card.gif');
-    return (this.props.direction === 'horizontal' ? (
+    const width = (this.props.direction === 'horizontal') ? 140 : 140;
+    const height = (this.props.direction === 'horizontal') ? 200 : 200;
+    return (
         <div style={{
           position: 'absolute',
-          left: (30*this.props.zindex).toString() + 'px',
+          left: 30*this.props.zindex+this.props.offsetFromLeft,
           transform: (this.state.hover ? 'translate(0,-10px)' : ''),
           padding: 0,
-          width: 140,
-          height: 200,
+          width: width,
+          height: height,
           zIndex: this.props.zindex,
           border: '1px solid #0000DA',
         }}>
@@ -49,35 +51,11 @@ export default class Card extends React.Component {
                           this.props.onClick(this.props.rank, this.props.suit);}}
             onMouseOver={()=>{console.log('mouseover'); this.setState({hover: true});}}
             onMouseLeave={()=>{console.log('mouseleave'); this.setState({hover: false});}}
-            width={140}
-            height={200}
+            width={width}
+            height={height}
             alt="the card was supposed to show up"
           />
         </div>
-      ) :
-      (
-        <div style={{
-          position: 'absolute',
-          left: (30*this.props.zindex).toString() + 'px',
-          transform: (this.state.hover ? 'translate(0,10px)' : ''),
-          padding: 0,
-          width: 140,
-          height: 200,
-          zIndex: this.props.zindex,
-          border: '1px solid #000000',
-        }}>
-          <img
-            src={cardimg}
-            onClick={()=>{console.log('hi ' + this.name);
-                          this.props.onClick(this.props.rank, this.props.suit);}}
-            onMouseOver={()=>{console.log('mouseover'); this.setState({hover: true});}}
-            onMouseLeave={()=>{console.log('mouseleave'); this.setState({hover: false});}}
-            width={140}
-            height={200}
-            alt="the card was supposed to show up"
-          />
-        </div>
-      )
     );
   }
 }
