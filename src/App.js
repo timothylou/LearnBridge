@@ -7,16 +7,6 @@ import {SEAT_NORTH, SEAT_SOUTH, SEAT_EAST, SEAT_WEST} from './Player';
 
 class App extends Component {
   render() {
-    // return (
-    //   <div className="App">
-    //     <div className="App-header">
-    //       <h2>Welcome to React</h2>
-    //     </div>
-    //     <p className="App-intro">
-    //       To get started, edit <code>src/App.js</code> and save to reload.
-    //     </p>
-    //   </div>
-    // );
     const d = new Deck();
     d.shuffle();
     const hands=d.generateHands();
@@ -28,16 +18,13 @@ class App extends Component {
       }}>
         <GameBoard
           dealer={SEAT_NORTH}
+          northHand={hands[0]}
+          southHand={hands[1]}
+          eastHand={hands[2]}
+          westHand={hands[3]}
         />
       </div>
-    )
-
-    // return (
-    //   <BridgeHand
-    //     rawcardslist={hands[0]}
-    //     trumpSuit='h'
-    //   />
-    // );
+    );
   }
 }
 

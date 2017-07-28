@@ -5,6 +5,7 @@ import Deck from './Deck';
 export default class BridgeHand extends React.Component {
   constructor(props) {
     super(props);
+    console.log('BridgeHand constructor called!');
     this.state = {
       cards: this.props.rawcardslist,
       inThisHand: false

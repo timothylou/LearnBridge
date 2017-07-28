@@ -10,15 +10,13 @@ import BridgeBiddingEngine from './BridgeBiddingEngine';
 export default class GameBoard extends React.Component {
   constructor(props) {
     super(props);
-    const d = new Deck();
-    d.shuffle();
-    const hands = d.generateHands();
+    console.log('GameBoard constructor called!');
     this.state = {
       wwidth: '0', wheight: '0',
-      northHand: hands[0],
-      eastHand: hands[1],
-      southHand: hands[2],
-      westHand: hands[3],
+      northHand: this.props.northHand,
+      eastHand: this.props.eastHand,
+      southHand: this.props.southHand,
+      westHand: this.props.westHand,
       cardsOnTable: [],
       whoseTurn: this.props.dealer,
       trickswon_NS: 0,
@@ -65,7 +63,7 @@ export default class GameBoard extends React.Component {
         numCardsPlayedE: trickNS+trickEW,
         numCardsPlayedW: trickNS+trickEW,
       });
-      this.bridgeEngine.clearBoard();
+      this.bridgeEngine.clearBoard(); // can wait until next trick starts to clear..
       console.log('GameBoard: winner of round was: ' + winner);
     }
     else
