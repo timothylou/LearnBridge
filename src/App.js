@@ -12,9 +12,14 @@ class App extends Component {
     const hands=d.generateHands();
     return (
       <div style={{
-        backgroundColor: 'red',
-        width: '100%',
-        height: '100%',
+        backgroundColor: 'white',
+        position: 'absolute',
+        width: '75%',
+        height: '80%',
+        top: '5%',
+        left: '5%',
+        border: '4px solid #00FFFF',
+        id: 'gameboardidtest'
       }}>
         <GameBoard
           dealer={SEAT_NORTH}
