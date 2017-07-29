@@ -1,15 +1,18 @@
-import Card, {VALID_SUITS, VALID_RANKS} from './Card';
+import Card from './Card';
+import {RANKS, SUITS} from './constants/Game';
 
 export default class Deck {
   constructor() {
     this.deck = new Array(52);
-    for (let isuit = 0; isuit < VALID_SUITS.length; isuit++) {
-      for (let irank = 0; irank < VALID_RANKS.length; irank++) {
-        this.deck[isuit*VALID_RANKS.length + irank] = {
-          rank: VALID_RANKS[irank],
-          suit: VALID_SUITS[isuit],
+    let scount = 0;
+    for (let suit in SUITS) {
+      for (let irank = 0; irank < RANKS.length; irank++) {
+        this.deck[scount*RANKS.length + irank] = {
+          rank: RANKS[irank],
+          suit: SUITS[suit],
         };
       }
+      scount += 1;
     }
   }
   getCards() {

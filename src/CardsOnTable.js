@@ -1,6 +1,6 @@
-import Card, {RANK_VALUE_MAP, VALID_SUITS, VALID_RANKS,
-  SUIT_CLUBS, SUIT_DIAMONDS, SUIT_HEARTS, SUIT_SPADES} from './Card';
+import Card from './Card';
 import React from 'react';
+import {SEATS, SUITS, RANKS, RANK_VALUE_MAP} from './constants/Game';
 
 
 function CardsOnTable(props) {

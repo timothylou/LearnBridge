@@ -1,13 +1,8 @@
 import React from 'react';
 import BridgeHand from './BridgeHand';
-import Card, {RANK_VALUE_MAP, VALID_SUITS, VALID_RANKS,
-  SUIT_CLUBS, SUIT_DIAMONDS, SUIT_HEARTS, SUIT_SPADES} from './Card';
+import Card from './Card';
+import {SEATS, SUITS, RANK_VALUE_MAP} from './constants/Game';
 
-
-export const SEAT_NORTH = 'N';
-export const SEAT_SOUTH = 'S';
-export const SEAT_EAST  = 'E';
-export const SEAT_WEST  = 'W';
 
 export default class Player extends React.Component {
   constructor(props) {
@@ -101,14 +96,14 @@ export default class Player extends React.Component {
       urlToGetPlay += "-" + playhist;
     // o=statehistory (is returned back unchanged for state maintenance)
     urlToGetPlay += "&o=" + "state1";
-    console.log(this.props.getAPIHandRep(SEAT_NORTH));
-    console.log(this.props.getAPIHandRep(SEAT_SOUTH));
-    console.log(this.props.getAPIHandRep(SEAT_EAST));
-    console.log(this.props.getAPIHandRep(SEAT_WEST));
-    urlToGetPlay += "&n=" + this.props.getAPIHandRep(SEAT_NORTH);
-    urlToGetPlay += "&s=" + this.props.getAPIHandRep(SEAT_SOUTH);
-    urlToGetPlay += "&e=" + this.props.getAPIHandRep(SEAT_EAST);
-    urlToGetPlay += "&w=" + this.props.getAPIHandRep(SEAT_WEST);
+    console.log(this.props.getAPIHandRep(SEATS.NORTH));
+    console.log(this.props.getAPIHandRep(SEATS.SOUTH));
+    console.log(this.props.getAPIHandRep(SEATS.EAST));
+    console.log(this.props.getAPIHandRep(SEATS.WEST));
+    urlToGetPlay += "&n=" + this.props.getAPIHandRep(SEATS.NORTH);
+    urlToGetPlay += "&s=" + this.props.getAPIHandRep(SEATS.SOUTH);
+    urlToGetPlay += "&e=" + this.props.getAPIHandRep(SEATS.EAST);
+    urlToGetPlay += "&w=" + this.props.getAPIHandRep(SEATS.WEST);
     console.log(urlToGetPlay);
     let retxml = "";
     fetch(urlToGetPlay, {
@@ -166,16 +161,16 @@ export default class Player extends React.Component {
     let spades = '', hearts = '', diamonds = '', clubs = '';
     for (let i=0; i<this.state.cards.length; i++) {
       switch (this.state.cards[i].suit) {
-        case SUIT_SPADES:
+        case SUITS.SPADES:
           spades += this.state.cards[i].rank;
           break;
-        case SUIT_HEARTS:
+        case SUITS.HEARTS:
           hearts += this.state.cards[i].rank;
           break;
-        case SUIT_DIAMONDS:
+        case SUITS.DIAMONDS:
           diamonds += this.state.cards[i].rank;
           break;
-        case SUIT_CLUBS:
+        case SUITS.CLUBS:
           clubs += this.state.cards[i].rank;
           break;
         default:

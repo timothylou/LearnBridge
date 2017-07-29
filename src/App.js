@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import Card, {VALID_SUITS} from './Card';
+import Card from './Card';
 import BridgeHand from './BridgeHand';
 import Deck from './Deck';
 import GameBoard from './GameBoard';
-import {SEAT_NORTH, SEAT_SOUTH, SEAT_EAST, SEAT_WEST} from './Player';
+import {SEATS} from './constants/Game';
 
 class App extends Component {
   render() {
@@ -22,7 +22,7 @@ class App extends Component {
         id: 'gameboardidtest'
       }}>
         <GameBoard
-          dealer={SEAT_NORTH}
+          dealer={SEATS.NORTH}
           northHand={hands[0]}
           southHand={hands[1]}
           eastHand={hands[2]}

@@ -1,5 +1,4 @@
-import {SEAT_NORTH, SEAT_EAST, SEAT_SOUTH, SEAT_WEST} from './Player';
-import Card, {VALID_RANKS, VALID_SUITS, RANK_VALUE_MAP} from './Card';
+import {RANK_VALUE_MAP} from './constants/Game';
 
 
 export default class BridgePlayingEngine {

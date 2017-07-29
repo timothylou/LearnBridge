@@ -1,9 +1,8 @@
 import BridgePlayingEngine from './BridgePlayingEngine';
 import BridgeBiddingEngine from './BridgeBiddingEngine';
 import Deck from './Deck';
-import Card, {RANK_VALUE_MAP, VALID_SUITS, VALID_RANKS} from './Card';
 import BridgeHand from './BridgeHand';
-import {SEAT_NORTH, SEAT_SOUTH, SEAT_EAST, SEAT_WEST} from './Player';
+import {SEATS} from './constants/Game';
 
 
 export default class BridgeGameEngine {
@@ -31,7 +30,7 @@ export default class BridgeGameEngine {
 
   getRoundWinner() {
     const winner = this.playEngine.getRoundWinner();
-    if (winner === SEAT_NORTH || winner === SEAT_SOUTH) this.trickswon_NS++;
+    if (winner === SEATS.NORTH || winner === SEATS.SOUTH) this.trickswon_NS++;
     else this.trickswon_EW++;
     return winner;
   }

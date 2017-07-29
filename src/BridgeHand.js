@@ -1,5 +1,5 @@
 import React from 'react';
-import Card, {RANK_VALUE_MAP} from './Card';
+import Card from './Card';
 import Deck from './Deck';
 
 export default class BridgeHand extends React.Component {

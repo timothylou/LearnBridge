@@ -1,12 +1,12 @@
 import React from 'react';
-import Card, {RANK_VALUE_MAP, VALID_SUITS, VALID_RANKS,
-  SUIT_CLUBS, SUIT_DIAMONDS, SUIT_HEARTS, SUIT_SPADES} from './Card';
+import Card from './Card';
 import Deck from './Deck';
 import BridgeHand from './BridgeHand';
-import Player, {SEAT_NORTH, SEAT_SOUTH, SEAT_EAST, SEAT_WEST} from './Player';
+import Player from './Player';
 import BridgeGameEngine from './BridgeGameEngine';
 import BridgePlayingEngine from './BridgePlayingEngine';
 import BridgeBiddingEngine from './BridgeBiddingEngine';
+import {SUITS, RANKS, RANK_VALUE_MAP, SEATS} from './constants/Game';
 
 export default class GameBoard extends React.Component {
   constructor(props) {
@@ -38,23 +38,23 @@ export default class GameBoard extends React.Component {
   getAPIrepr_cards(seat) {
     let spades = '', hearts = '', diamonds = '', clubs = '';
     let cards;
-    if (seat === SEAT_NORTH) cards = this.state.northHand;
-    else if (seat === SEAT_SOUTH) cards = this.state.southHand;
-    else if (seat === SEAT_EAST) cards = this.state.eastHand;
-    else if (seat === SEAT_WEST) cards = this.state.westHand;
+    if (seat === SEATS.NORTH) cards = this.state.northHand;
+    else if (seat === SEATS.SOUTH) cards = this.state.southHand;
+    else if (seat === SEATS.EAST) cards = this.state.eastHand;
+    else if (seat === SEATS.WEST) cards = this.state.westHand;
 
     for (let i=0; i<cards.length; i++) {
       switch (cards[i].suit) {
-        case SUIT_SPADES:
+        case SUITS.SPADES:
           spades += cards[i].rank;
           break;
-        case SUIT_HEARTS:
+        case SUITS.HEARTS:
           hearts += cards[i].rank;
           break;
-        case SUIT_DIAMONDS:
+        case SUITS.DIAMONDS:
           diamonds += cards[i].rank;
           break;
-        case SUIT_CLUBS:
+        case SUITS.CLUBS:
           clubs += cards[i].rank;
           break;
         default:
@@ -74,14 +74,14 @@ export default class GameBoard extends React.Component {
     return repr;
   }
   _nextPlayersTurn() {
-    if (this.state.whoseTurn === SEAT_NORTH)
-      this.setState({whoseTurn: SEAT_EAST, numCardsPlayedN: this.state.numCardsPlayedN+1});
-    else if (this.state.whoseTurn === SEAT_EAST)
-      this.setState({whoseTurn: SEAT_SOUTH, numCardsPlayedE: this.state.numCardsPlayedE+1});
-    else if (this.state.whoseTurn === SEAT_SOUTH)
-      this.setState({whoseTurn: SEAT_WEST, numCardsPlayedS: this.state.numCardsPlayedS+1});
-    else if (this.state.whoseTurn === SEAT_WEST)
-      this.setState({whoseTurn: SEAT_NORTH, numCardsPlayedW: this.state.numCardsPlayedW+1});
+    if (this.state.whoseTurn === SEATS.NORTH)
+      this.setState({whoseTurn: SEATS.EAST, numCardsPlayedN: this.state.numCardsPlayedN+1});
+    else if (this.state.whoseTurn === SEATS.EAST)
+      this.setState({whoseTurn: SEATS.SOUTH, numCardsPlayedE: this.state.numCardsPlayedE+1});
+    else if (this.state.whoseTurn === SEATS.SOUTH)
+      this.setState({whoseTurn: SEATS.WEST, numCardsPlayedS: this.state.numCardsPlayedS+1});
+    else if (this.state.whoseTurn === SEATS.WEST)
+      this.setState({whoseTurn: SEATS.NORTH, numCardsPlayedW: this.state.numCardsPlayedW+1});
   }
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -150,13 +150,13 @@ export default class GameBoard extends React.Component {
         }}>
           <Player
             rawcardslist={this.state.northHand}
-            isMyTurn={this.state.whoseTurn === SEAT_NORTH}
+            isMyTurn={this.state.whoseTurn === SEATS.NORTH}
             trumpSuit='h'
-            seatDirection={SEAT_NORTH}
+            seatDirection={SEATS.NORTH}
             bot={true}
             dummy={false}
             partnerIsBot={false}
-            partner={SEAT_SOUTH}
+            partner={SEATS.SOUTH}
             faceup={true}
             direction={'horizontal'}
             offsetFromLeft={15*this.state.numCardsPlayedN}
@@ -177,10 +177,10 @@ export default class GameBoard extends React.Component {
         }}>
           <Player
             rawcardslist={this.state.southHand}
-            isMyTurn={this.state.whoseTurn === SEAT_SOUTH}
+            isMyTurn={this.state.whoseTurn === SEATS.SOUTH}
             trumpSuit='h'
-            seatDirection={SEAT_SOUTH}
-            partner={SEAT_NORTH}
+            seatDirection={SEATS.SOUTH}
+            partner={SEATS.NORTH}
             bot={false}
             dummy={false}
             partnerIsBot={true}
@@ -205,10 +205,10 @@ export default class GameBoard extends React.Component {
         }}>
           <Player
             rawcardslist={this.state.eastHand}
-            isMyTurn={this.state.whoseTurn === SEAT_EAST}
+            isMyTurn={this.state.whoseTurn === SEATS.EAST}
             trumpSuit='h'
-            seatDirection={SEAT_EAST}
-            partner={SEAT_WEST}
+            seatDirection={SEATS.EAST}
+            partner={SEATS.WEST}
             bot={false}
             dummy={true}
             partnerIsBot={false}
@@ -233,10 +233,10 @@ export default class GameBoard extends React.Component {
         }}>
           <Player
             rawcardslist={this.state.westHand}
-            isMyTurn={this.state.whoseTurn === SEAT_WEST}
+            isMyTurn={this.state.whoseTurn === SEATS.WEST}
             trumpSuit='h'
-            seatDirection={SEAT_WEST}
-            partner={SEAT_EAST}
+            seatDirection={SEATS.WEST}
+            partner={SEATS.EAST}
             bot={false}
             dummy={false}
             partnerIsBot={false}
