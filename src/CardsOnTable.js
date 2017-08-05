@@ -19,6 +19,17 @@ function CardsOnTable(props) {
     );
   });
   return (
-
-  )
+    <div>
+      {(reactcardslist.length > 0) && reactcardlist[0]}
+    </div>
+    <div>
+      {(reactcardslist.length > 1) && reactcardlist[1]}
+    </div>
+    <div>
+      {(reactcardslist.length > 2) && reactcardlist[2]}
+    </div>
+    <div>
+      {(reactcardslist.length > 3) && reactcardlist[3]}
+    </div>
+  );
 }

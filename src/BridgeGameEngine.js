@@ -1,7 +1,5 @@
 import BridgePlayingEngine from './BridgePlayingEngine';
 import BridgeBiddingEngine from './BridgeBiddingEngine';
-import Deck from './Deck';
-import BridgeHand from './BridgeHand';
 import {SEATS} from './constants/Game';
 
 
@@ -14,6 +12,7 @@ export default class BridgeGameEngine {
     this.playEngine.setTrumpSuit('h');
     this.trickswon_NS = 0; // maybe can just store this in GameBoard
     this.trickswon_EW = 0; // maybe can just store this in GameBoard
+    // this.playCard = this.playCard.bind(this);
   }
 
   isValidCard(card, cardsInHand) {

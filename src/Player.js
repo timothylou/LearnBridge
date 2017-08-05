@@ -13,7 +13,6 @@ export default class Player extends React.Component {
     this.state = {
       cards: this.sort('h',this.props.rawcardslist),
       numCardsPlayed: 0, // could just calculate this based on length of cards
-      //isMyTurn: this.props.isMyTurn,
       loading: false,
     };
     this.onValidCardClick = this.onValidCardClick.bind(this);
