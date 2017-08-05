@@ -1,11 +1,11 @@
 
 
 export const Card_v = {
-  width: 140,
-  height: 200,
+  basewidth: 7,
+  baseheight: 10,
 };
 
 export const Card_h = {
-  width: 200,
-  height: 140,
+  basewidth: 10,
+  baseheight: 7,
 }

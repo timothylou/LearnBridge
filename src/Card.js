@@ -1,20 +1,6 @@
 import React from 'react';
-import styles from './styles/CardStyles.css';
 import {Card_h, Card_v} from './constants/Style';
-
-const SUIT_CLUBS = 'c';
-const SUIT_DIAMONDS = 'd';
-const SUIT_HEARTS = 'h';
-const SUIT_SPADES = 's';
-const VALID_SUITS = [SUIT_CLUBS, SUIT_DIAMONDS, SUIT_HEARTS, SUIT_SPADES];
-const VALID_RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-const RANK_VALUE_MAP = {
-  '2': 2,  '3': 3,  '4' : 4,
-  '5': 5,  '6': 6,  '7' : 7,
-  '8': 8,  '9': 9,  '10': 10,
-  'J': 11, 'Q': 12, 'K' : 13,
-  'A': 14,
-};
+import {SUITS, RANKS, RANK_VALUE_MAP} from './constants/Game';
 
 export default class Card extends React.Component {
   constructor(props) {
@@ -49,8 +35,8 @@ export default class Card extends React.Component {
             src={cardimg}
             onClick={()=>{console.log('hi ' + this.name);
                           this.props.onClick(this.props.rank, this.props.suit);}}
-            onMouseOver={()=>{console.log('mouseover'); this.setState({hover: true});}}
-            onMouseLeave={()=>{console.log('mouseleave'); this.setState({hover: false});}}
+            onMouseOver={()=>{this.setState({hover: true});}}
+            onMouseLeave={()=>{this.setState({hover: false});}}
             width={width}
             height={height}
             alt="the card was supposed to show up"
@@ -59,5 +45,3 @@ export default class Card extends React.Component {
     );
   }
 }
-
-export { Card, VALID_SUITS, VALID_RANKS, RANK_VALUE_MAP };

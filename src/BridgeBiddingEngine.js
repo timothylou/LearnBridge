@@ -1,15 +1,6 @@
-import {SEAT_NORTH, SEAT_EAST, SEAT_SOUTH, SEAT_WEST} from './Player';
-import Card, {VALID_RANKS, VALID_SUITS, RANK_VALUE_MAP} from './Card';
-
-const VALID_BID_LEVELS = [1, 2, 3, 4, 5, 6, 7];
-const VALID_BID_SUITS = ['c', 'd', 'h', 's', 'nt'];
-const BID_SUIT_ORDER_MAP = {
-  'c': 1, 'd': 2, 'h': 3, 's': 4, 'nt': 5,
-};
-const BID_SUIT = 'suit';
-const BID_PASS = 'pass';
-const BID_DBL  = 'double';
-const BID_RDBL = 'redouble';
+import Card from './Card';
+import {BID_LEVELS, BID_TYPES as BT, BID_SUITS, BID_SUIT_ORDER_MAP,
+  SEATS} from './constants/Game';
 
 export default class BridgeBiddingEngine {
   constructor() {
@@ -19,36 +10,36 @@ export default class BridgeBiddingEngine {
 
   isValidBid(bid, bidder) { // bid = {type: 'suit', suit: 'c','d','h','s','nt','pass', level= 1...7}
     if (this.bidHistory.length === 0) {
-      if (bid.type === BID_PASS || bid.type === BID_SUIT) return true;
-      else if (bid.type === BID_DBL || bid.type === BID_RDBL) return false;
+      if (bid.type === BT.PASS || bid.type === BT.SUIT) return true;
+      else if (bid.type === BT.DBL || bid.type === BT.RDBL) return false;
       else throw 'InvalidBidTypeError';
     }
-    if (bid.type === BID_PASS) { return true; }
-    if (bid.type === BID_DBL) {
-      if (this.bidHistory[this.bidHistory.length-1].bid.type === BID_SUIT)
+    if (bid.type === BT.PASS) { return true; }
+    if (bid.type === BT.DBL) {
+      if (this.bidHistory[this.bidHistory.length-1].bid.type === BT.SUIT)
         return true;
       else if (this.bidHistory.length >= 3) {
-        if (this.bidHistory[this.bidHistory.length-1].bid.type === BID_PASS &&
-            this.bidHistory[this.bidHistory.length-2].bid.type === BID_PASS &&
-            this.bidHistory[this.bidHistory.length-3].bid.type === BID_SUIT) {
+        if (this.bidHistory[this.bidHistory.length-1].bid.type === BT.PASS &&
+            this.bidHistory[this.bidHistory.length-2].bid.type === BT.PASS &&
+            this.bidHistory[this.bidHistory.length-3].bid.type === BT.SUIT) {
           return true;
         }
       }
       return false;
     }
-    if (bid.type === BID_RDBL) {
-      if (this.bidHistory[this.bidHistory.length-1].bid.type === BID_DBL)
+    if (bid.type === BT.RDBL) {
+      if (this.bidHistory[this.bidHistory.length-1].bid.type === BT.DBL)
         return true;
       else if (this.bidHistory.length >= 3) {
-        if (this.bidHistory[this.bidHistory.length-1].bid.type === BID_PASS &&
-            this.bidHistory[this.bidHistory.length-2].bid.type === BID_PASS &&
-            this.bidHistory[this.bidHistory.length-3].bid.type === BID_DBL) {
+        if (this.bidHistory[this.bidHistory.length-1].bid.type === BT.PASS &&
+            this.bidHistory[this.bidHistory.length-2].bid.type === BT.PASS &&
+            this.bidHistory[this.bidHistory.length-3].bid.type === BT.DBL) {
           return true;
         }
       }
       return false;
     }
-    if (bid.type === BID_SUIT) {
+    if (bid.type === BT.SUIT) {
       if (this.prevSuitBid.bidder === '') { // this bid would be first suit bid
         return true;
       }
@@ -65,11 +56,11 @@ export default class BridgeBiddingEngine {
   isBiddingComplete() {
     const historylen = this.bidHistory.length;
     if (historylen >= 3) {
-      if (this.bidHistory[historylen-1].bid.type === BID_PASS &&
-          this.bidHistory[historylen-2].bid.type === BID_PASS &&
-          this.bidHistory[historylen-3].bid.type === BID_PASS) {
+      if (this.bidHistory[historylen-1].bid.type === BT.PASS &&
+          this.bidHistory[historylen-2].bid.type === BT.PASS &&
+          this.bidHistory[historylen-3].bid.type === BT.PASS) {
         if (this.prevSuitBid.bidder !== '') return true;
-        else if (historylen === 4 && this.bidHistory[historylen-4].bid.type === BID_PASS)
+        else if (historylen === 4 && this.bidHistory[historylen-4].bid.type === BT.PASS)
           return true;
       }
     }
@@ -81,18 +72,18 @@ export default class BridgeBiddingEngine {
       return {suit: 'pass'};
     const finalBid = this.prevSuitBid;
     let seatA, seatB;
-    if (finalBid.bidder === SEAT_NORTH || finalBid.bidder === SEAT_SOUTH) {
-      seatA = SEAT_NORTH;;
-      seatB = SEAT_SOUTH;
+    if (finalBid.bidder === SEATS.NORTH || finalBid.bidder === SEATS.SOUTH) {
+      seatA = SEATS.NORTH;;
+      seatB = SEATS.SOUTH;
     }
     else {
-      seatA = SEAT_EAST;
-      seatB = SEAT_WEST;
+      seatA = SEATS.EAST;
+      seatB = SEATS.WEST;
     }
     for (let i=0; i<this.bidHistory.length; i++) {
       if ((this.bidHistory[i].bidder === seatA ||
         this.bidHistory[i].bidder === seatB) &&
-        this.bidHistory[i].bid.type === BID_SUIT &&
+        this.bidHistory[i].bid.type === BT.SUIT &&
         this.bidHistory[i].bid.suit === finalBid.bid.suit)
         return {
           suit: finalBid.bid.suit,
@@ -110,7 +101,7 @@ export default class BridgeBiddingEngine {
       bid: bid,
       bidder: bidder
     });
-    if (bid.type === BID_SUIT) {
+    if (bid.type === BT.SUIT) {
       this.prevSuitBid = {
         bid: bid,
         bidder: bidder

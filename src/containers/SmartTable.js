@@ -1,47 +1,86 @@
 import React from 'react';
-import Card from './Card';
-import Deck from './Deck';
-import BridgeHand from './BridgeHand';
-import Player from './Player';
-import BridgeGameEngine from './BridgeGameEngine';
-import BridgePlayingEngine from './BridgePlayingEngine';
-import BridgeBiddingEngine from './BridgeBiddingEngine';
-import {SUITS, RANKS, RANK_VALUE_MAP, SEATS} from './constants/Game';
+import {connect} from 'react-redux';
+import Deck from '../Deck';
+import SmartPlayer from './SmartPlayer';
+import CardsOnTable from '../components/CardsOnTable';
+import BridgeGameEngine from '../BridgeGameEngine';
+import {SUITS, RANKS, RANK_VALUE_MAP, SEATS} from '../constants/Game';
+import { newGame, playCard, finishedTrick } from '../actions/actions';
 
-export default class GameBoard extends React.Component {
+class SmartTable extends React.Component {
   constructor(props) {
     super(props);
-    console.log('GameBoard constructor called!');
+    console.log('SmartTable constructor called!');
     this.state = {
       wwidth: '0', wheight: '0',
-      northHand: this.props.northHand,
-      eastHand: this.props.eastHand,
-      southHand: this.props.southHand,
-      westHand: this.props.westHand,
-      cardsOnTable: [],
-      whoseTurn: this.props.dealer,
-      trickswon_NS: 0,
-      trickswon_EW: 0,
-      numCardsPlayedN: 0,  // this is really just so we can recenter the cards
-      numCardsPlayedS: 0,
-      numCardsPlayedE: 0,
-      numCardsPlayedW: 0,
     };
-    this.playHistory = [];
+
+    const d = new Deck();
+    d.shuffle();
+    const hands=d.generateHands();
+    this.APIHandReps = {
+      [SEATS.NORTH]: this.getAPIrepr_cards(hands[0]),
+      [SEATS.SOUTH]: this.getAPIrepr_cards(hands[1]),
+      [SEATS.EAST]: this.getAPIrepr_cards(hands[2]),
+      [SEATS.WEST]: this.getAPIrepr_cards(hands[3]),
+    };
+    const { dispatch } = this.props;
+    dispatch(newGame( 'N', {
+      'N': this.sort('h',hands[0]),
+      'S': this.sort('h',hands[1]),
+      'E': this.sort('h',hands[2]),
+      'W': this.sort('h',hands[3])
+    }, ''));
+    // this.sleep(1);
     this.bridgeEngine = new BridgeGameEngine(this.props.dealer);
     this.getAPIrepr_cards = this.getAPIrepr_cards.bind(this);
     this.getAPIrepr_playhistory = this.getAPIrepr_playhistory.bind(this);
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
-    this.onValidCardClick = this.onValidCardClick.bind(this);
+    this.registerValidCardPlay = this.registerValidCardPlay.bind(this);
     this.isValidCardClick = this.isValidCardClick.bind(this);
   }
-  getAPIrepr_cards(seat) {
+  _sortSuitByRank(cardA, cardB) {
+    return -(RANK_VALUE_MAP[cardA.rank] - RANK_VALUE_MAP[cardB.rank]);
+  }
+  sort(trumpsSuit, cards) {
+    let sortedcards = [];
+    let clubs = [];
+    let diamonds = [];
+    let hearts = [];
+    let spades = [];
+
+    for (let i=0; i < cards.length; i++) {
+      switch(cards[i].suit) {
+        case 'c':
+          clubs.push(cards[i]);
+          break;
+        case 'd':
+          diamonds.push(cards[i]);
+          break;
+        case 'h':
+          hearts.push(cards[i]);
+          break;
+        case 's':
+          spades.push(cards[i]);
+          break;
+        default:
+          throw 'InvalidSuitError';
+      }
+    }
+    clubs.sort(this._sortSuitByRank);
+    diamonds.sort(this._sortSuitByRank);
+    hearts.sort(this._sortSuitByRank);
+    spades.sort(this._sortSuitByRank);
+
+    if (trumpsSuit==='c') sortedcards = clubs.concat(diamonds,spades,hearts);
+    else if (trumpsSuit==='d') sortedcards = diamonds.concat(clubs,hearts,spades);
+    else if (trumpsSuit==='h') sortedcards = hearts.concat(spades,diamonds,clubs);
+    else if (trumpsSuit==='s') sortedcards = spades.concat(hearts,clubs,diamonds);
+    console.log(sortedcards);
+    return sortedcards;
+  }
+  getAPIrepr_cards(cards) {
     let spades = '', hearts = '', diamonds = '', clubs = '';
-    let cards;
-    if (seat === SEATS.NORTH) cards = this.state.northHand;
-    else if (seat === SEATS.SOUTH) cards = this.state.southHand;
-    else if (seat === SEATS.EAST) cards = this.state.eastHand;
-    else if (seat === SEATS.WEST) cards = this.state.westHand;
 
     for (let i=0; i<cards.length; i++) {
       switch (cards[i].suit) {
@@ -66,59 +105,30 @@ export default class GameBoard extends React.Component {
   }
   getAPIrepr_playhistory() {
     let repr = "";
-    for (let i=0; i<this.playHistory.length; i++) {
-      repr += this.playHistory[i].suit.toUpperCase() + this.playHistory[i].rank.toUpperCase();
-      if (i != this.playHistory.length - 1)
+    for (let i=0; i<this.props.history.length; i++) {
+      repr += this.props.history[i].suit.toUpperCase() + this.props.history[i].rank.toUpperCase();
+      if (i != this.props.history.length - 1)
         repr += "-"
     }
     return repr;
   }
-  _nextPlayersTurn() {
-    if (this.state.whoseTurn === SEATS.NORTH)
-      this.setState({whoseTurn: SEATS.EAST, numCardsPlayedN: this.state.numCardsPlayedN+1});
-    else if (this.state.whoseTurn === SEATS.EAST)
-      this.setState({whoseTurn: SEATS.SOUTH, numCardsPlayedE: this.state.numCardsPlayedE+1});
-    else if (this.state.whoseTurn === SEATS.SOUTH)
-      this.setState({whoseTurn: SEATS.WEST, numCardsPlayedS: this.state.numCardsPlayedS+1});
-    else if (this.state.whoseTurn === SEATS.WEST)
-      this.setState({whoseTurn: SEATS.NORTH, numCardsPlayedW: this.state.numCardsPlayedW+1});
-  }
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-  async onValidCardClick(card, seat) {
-    console.log('GameBoard: received validated click from ' + card.rank + ' of ' + card.suit +
-      ' from ' + seat);
+  registerValidCardPlay(card, seat) {
+    console.log('SmartTable::registerValidCardPlay: received validated card to play from', seat);
     this.bridgeEngine.playCard(card, seat);
-    this.playHistory.push(card);
     if (this.bridgeEngine.isTrickOver()) {
       const winner = this.bridgeEngine.getRoundWinner();
-      const trickNS = this.bridgeEngine.getNSScore();
-      const trickEW = this.bridgeEngine.getEWScore();
-      this.setState({
-        whoseTurn: winner,
-        trickswon_NS: trickNS,
-        trickswon_EW: trickEW,
-        numCardsPlayedN: trickNS+trickEW,
-        numCardsPlayedS: trickNS+trickEW,
-        numCardsPlayedE: trickNS+trickEW,
-        numCardsPlayedW: trickNS+trickEW,
-      });
+      this.props.dispatch(finishedTrick(winner));
       this.bridgeEngine.clearBoard(); // can wait until next trick starts to clear..
-      console.log('GameBoard: winner of round was: ' + winner);
+      console.log('SmartTable::registerValidCardPlay: winner of round was: ' + winner);
     }
-    else
-      this._nextPlayersTurn();
-    await this.sleep(1);
-    console.log('GameBoard: next player: ' + this.state.whoseTurn);
   }
-  isValidCardClick(card, seat, hand) {
-    console.log('GameBoard:isValidCardClick: whoseturn: ' + this.state.whoseTurn);
-    let isValid = (this.state.whoseTurn === seat) && this.bridgeEngine.isValidCard(card, hand);
-    if (isValid) console.log('GameBoard: click from '+ card.rank + ' of ' + card.suit +
-      ' from ' + seat + ' is VALID.');
-    else console.log('GameBoard: click from '+ card.rank + ' of ' + card.suit +
-      ' from ' + seat + ' is INVALID.');
+  isValidCardClick(card, seat) {
+    const isValid = this.bridgeEngine.isValidCard(card, this.props.hands[seat]);
+    if (isValid) console.log('SmartTable::isValidCardClick: VALID');
+    else console.log('SmartTable::isValidCardClick: INVALID');
     return isValid;
   }
   componentDidMount() {
@@ -134,7 +144,7 @@ export default class GameBoard extends React.Component {
     //console.log('win height: ' + this.state.wheight.toString());
   }
   render() {
-    console.log('GameBoard render');
+    console.log('SmartTable render');
     console.log(this.state.wwidth*0.5);
     console.log(this.state.wwidth);
     return (
@@ -148,21 +158,18 @@ export default class GameBoard extends React.Component {
           width: (140+30*12)+6,
           border: '3px solid #FF0000',
         }}>
-          <Player
-            rawcardslist={this.state.northHand}
-            isMyTurn={this.state.whoseTurn === SEATS.NORTH}
+          <SmartPlayer
             trumpSuit='h'
-            seatDirection={SEATS.NORTH}
+            seat={SEATS.NORTH}
             bot={true}
             dummy={false}
             partnerIsBot={false}
             partner={SEATS.SOUTH}
             faceup={true}
             direction={'horizontal'}
-            offsetFromLeft={15*this.state.numCardsPlayedN}
-            onValidCardClick={this.onValidCardClick}
+            registerValidCardPlay={this.registerValidCardPlay}
             isValidCardClick={this.isValidCardClick}
-            getAPIHandRep={this.getAPIrepr_cards}
+            APIHandReps={this.APIHandReps}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
           />
         </div>
@@ -175,21 +182,18 @@ export default class GameBoard extends React.Component {
           marginLeft: -(140+30*12)/2,
           border: '3px solid #FF0000',
         }}>
-          <Player
-            rawcardslist={this.state.southHand}
-            isMyTurn={this.state.whoseTurn === SEATS.SOUTH}
+          <SmartPlayer
             trumpSuit='h'
-            seatDirection={SEATS.SOUTH}
+            seat={SEATS.SOUTH}
             partner={SEATS.NORTH}
             bot={false}
             dummy={false}
             partnerIsBot={true}
             faceup={true}
             direction={'horizontal'}
-            offsetFromLeft={15*this.state.numCardsPlayedS}
-            onValidCardClick={this.onValidCardClick}
+            registerValidCardPlay={this.registerValidCardPlay}
             isValidCardClick={this.isValidCardClick}
-            getAPIHandRep={this.getAPIrepr_cards}
+            APIHandReps={this.APIHandReps}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
           />
         </div>
@@ -203,21 +207,18 @@ export default class GameBoard extends React.Component {
           border: '3px solid #FF0000',
           transform: 'rotate(0deg)',
         }}>
-          <Player
-            rawcardslist={this.state.eastHand}
-            isMyTurn={this.state.whoseTurn === SEATS.EAST}
+          <SmartPlayer
             trumpSuit='h'
-            seatDirection={SEATS.EAST}
+            seat={SEATS.EAST}
             partner={SEATS.WEST}
             bot={false}
             dummy={true}
             partnerIsBot={false}
             faceup={true}
             direction={'vertical'}
-            offsetFromLeft={15*this.state.numCardsPlayedE}
-            onValidCardClick={this.onValidCardClick}
+            registerValidCardPlay={this.registerValidCardPlay}
             isValidCardClick={this.isValidCardClick}
-            getAPIHandRep={this.getAPIrepr_cards}
+            APIHandReps={this.APIHandReps}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
           />
         </div>
@@ -231,36 +232,44 @@ export default class GameBoard extends React.Component {
           border: '3px solid #FF0000',
           transform: 'rotate(0deg)',
         }}>
-          <Player
-            rawcardslist={this.state.westHand}
-            isMyTurn={this.state.whoseTurn === SEATS.WEST}
+          <SmartPlayer
             trumpSuit='h'
-            seatDirection={SEATS.WEST}
+            seat={SEATS.WEST}
             partner={SEATS.EAST}
             bot={false}
             dummy={false}
             partnerIsBot={false}
             faceup={true}
             direction={'vertical'}
-            offsetFromLeft={15*this.state.numCardsPlayedW}
-            onValidCardClick={this.onValidCardClick}
+            registerValidCardPlay={this.registerValidCardPlay}
             isValidCardClick={this.isValidCardClick}
-            getAPIHandRep={this.getAPIrepr_cards}
+            APIHandReps={this.APIHandReps}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
           />
         </div>
         <div style={{
           position: 'absolute',
-          left: '35%',
+          left: '40%',
           top: '35%',
           height: '30%',
-          width: '30%',
+          width: '20%',
           border: '3px solid #FF0000',
         }}>
-
+          <CardsOnTable
+            cardlist={this.props.cardsOnTable}
+          />
         </div>
       </div>
 
     );
   }
 }
+const mapStateToProps = (state, ownProps) => {
+  return {
+    hands: state.hands,
+    history: state.history,
+    cardsOnTable: state.cardsOnTable
+  }
+};
+
+export default connect(mapStateToProps)(SmartTable);

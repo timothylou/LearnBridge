@@ -1,16 +1,19 @@
 import React from 'react';
-import Card from './Card';
-import Deck from './Deck';
+import {connect} from 'react-redux';
+import SmartCard from './SmartCard';
+import Deck from '../Deck';
+import { newGame } from '../actions/actions';
 
-export default class BridgeHand extends React.Component {
+class SmartHand extends React.Component {
   constructor(props) {
     super(props);
-    console.log('BridgeHand constructor called!');
+    console.log('SmartHand constructor called!');
     this.onCardClick = this.onCardClick.bind(this);
   }
 
+
   onCardClick(crank, csuit) {
-    console.log('BridgeHand: Card ' + crank + ' of ' + csuit + ' clicked!');
+    console.log('SmartHand: Card ' + crank + ' of ' + csuit + ' clicked!');
     if (this.props.isValidCardClick({rank: crank, suit: csuit})) {
         this.props.onValidCardClick({rank: crank, suit: csuit});
     }
@@ -18,7 +21,7 @@ export default class BridgeHand extends React.Component {
   render() {
     const reactcardslist = this.props.rawcardslist.map((card, idx) => {
       return (
-          <Card
+          <SmartCard
             rank={card.rank}
             suit={card.suit}
             zindex={idx}
@@ -45,3 +48,11 @@ export default class BridgeHand extends React.Component {
     );
   }
 }
+
+const mapStateToProps = (state, ownProps) => {
+  return {
+    rawcardslist: state.hands[ownProps.seat]
+  }
+};
+// export default SmartHand;
+export default connect(mapStateToProps)(SmartHand);
