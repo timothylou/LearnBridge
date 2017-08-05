@@ -1,10 +1,20 @@
+/* UI actions */
+export const SCREEN_RESIZE = 'SCREEN_RESIZE';
 
+export const screenResize = (width, height) => ({
+  type: SCREEN_RESIZE,
+  width,
+  height
+});
+
+/* Gameplay actions */
 export const PLAY_CARD = 'PLAY_CARD';
 export const BOTPLAYCARD_REQUEST = 'BOTPLAYCARD_REQUEST';
 export const BOTPLAYCARD_RECEIVE = 'BOTPLAYCARD_RECEIVE';
 export const NEW_GAME = 'NEW_GAME';
 export const FINISHED_TRICK = 'FINISHED_TRICK';
-
+export const CLEAR_BOARD = 'CLEAR_BOARD';
+export const INCREMENT_WHOSETURN = 'INCREMENT_WHOSETURN';
 
 export const newGame = (dealer, hands, vulnerability) => ({
   type: NEW_GAME,
@@ -22,6 +32,14 @@ export const playCard = (card, player) => ({
 export const finishedTrick = (winner) => ({
   type: FINISHED_TRICK,
   winner
+});
+
+export const incrementWhoseTurn = () => ({
+  type: INCREMENT_WHOSETURN,
+});
+
+export const clearBoard = () => ({
+  type: CLEAR_BOARD,
 });
 
 export const requestBotPlayCard = (player) => ({
@@ -63,7 +81,8 @@ export function fetchBotPlayCard (player, url) {
       }
       suit = cardToPlay[0].toLowerCase();
       rank = cardToPlay[1].toUpperCase();
-      return dispatch(receiveBotPlayCard(player, {suit, rank}));
+      dispatch(receiveBotPlayCard(player, {suit, rank}));
+      return {suit, rank};
     });
   };
 }

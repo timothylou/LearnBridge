@@ -28,7 +28,8 @@ export default class SmartCard extends React.Component {
         <Card {...this.props}
           onMouseOver={this.onMouseOver}
           onMouseLeave={this.onMouseLeave}
-          isMouseOver={this.state.hover} />
+          isMouseOver={this.state.hover}
+         />
     );
   }
 }

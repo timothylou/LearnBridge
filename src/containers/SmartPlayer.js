@@ -3,14 +3,14 @@ import SmartHand from './SmartHand';
 import {SEATS, SUITS, RANK_VALUE_MAP} from '../constants/Game';
 import {connect} from 'react-redux';
 import Deck from '../Deck';
-import BridgeGameEngine from '../BridgeGameEngine';
+import {bridgeEngine} from '../BridgeGameEngine';
 import { newGame, playCard, fetchBotPlayCard } from '../actions/actions';
 
 class SmartPlayer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loading: false,
+      isExecutingPlay: false,
     };
     this.onValidCardClick = this.onValidCardClick.bind(this);
     this.isValidCardClick = this.isValidCardClick.bind(this);
@@ -22,32 +22,36 @@ class SmartPlayer extends React.Component {
     this.props.registerValidCardPlay(card, this.props.seat);
 
   }
+
   isValidCardClick(card) {
     // return this.props.isValidCardClick(card, this.seatDirection, this.state.cards);
-    if (this.props.isMyTurn)
-      return this.props.isValidCardClick(card, this.props.seat);
+    if (this.props.isMyTurn && !this.props.dummy)
+      return this.props.isValidCardToPlay(card, this.props.seat);
     else {
-      console.log('SmartPlayer::isValidCardClick: not your turn,', this.props.seat);
+      console.log('SmartPlayer::isValidCardToPlay: not your turn,', this.props.seat);
       return false;
     }
   }
 
   componentDidMount() {
-    if (this.props.isMyTurn && this.props.bot) {
-      console.log('SmartPlayer::componentDidMount: calling doBotPlay,', this.props.seat);
+    if (((this.props.bot && !this.props.dummy) || (this.props.partnerIsBot && this.props.dummy))
+    && (!this.props.isFetching && this.props.isMyTurn && !this.state.isExecutingPlay))  {
+      console.log('SmartPlayer::componentDidMount: calling doBotPlay');
+      this.setState({isExecutingPlay: true});
       this.doBotPlay();
     }
   }
   componentDidUpdate(prevProps) {
     console.log('SmartPlayer::componentDidUpdate:' + this.props.seat);
-    console.log(this.props);
-    if (!prevProps.isMyTurn && this.props.isMyTurn) {
+    console.log(this.state.isExecutingPlay);
+    // if (!prevProps.isMyTurn && this.props.isMyTurn) {
       if (((this.props.bot && !this.props.dummy) || (this.props.partnerIsBot && this.props.dummy))
-      && (!this.props.isFetching && this.props.isMyTurn))  {
-      console.log('SmartPlayer::componentDidUpdate: calling doBotPlay');
-      this.doBotPlay();
+      && (!this.props.isFetching && this.props.isMyTurn && !this.state.isExecutingPlay))  {
+        console.log('SmartPlayer::componentDidUpdate: calling doBotPlay');
+        this.setState({isExecutingPlay: true});
+        this.doBotPlay();
       }
-    }
+    // }
   }
   doBotPlay() {
     let urlToGetPlay = "http://gibrest.bridgebase.com/u_bm/robot.php?";
@@ -65,8 +69,6 @@ class SmartPlayer extends React.Component {
       urlToGetPlay += "-" + playhist;
     // o=statehistory (is returned back unchanged for state maintenance)
     urlToGetPlay += "&o=" + "state1";
-    console.log(this.props.cardsInHand);
-    console.log(this.props.hands);
     const nhand = this.props.APIHandReps[SEATS.NORTH];
     const shand = this.props.APIHandReps[SEATS.SOUTH];
     const ehand = this.props.APIHandReps[SEATS.EAST];
@@ -80,11 +82,11 @@ class SmartPlayer extends React.Component {
     let cardToPlay;
     this.props.dispatch(
       fetchBotPlayCard(this.props.seat, urlToGetPlay)
-    ).then(() => {
-      console.log("finished the fetchbotplaycard dispatch:", this.props.fetchedCard);
-      cardToPlay = this.props.fetchedCard;
-      this.props.dispatch(playCard(cardToPlay, this.props.seat));
-      this.props.registerValidCardPlay(cardToPlay, this.props.seat);
+    ).then((card) => {
+      console.log("finished the fetchbotplaycard dispatch:", card);
+      this.props.dispatch(playCard(card, this.props.seat));
+      this.props.registerValidCardPlay(card, this.props.seat);
+      this.setState({isExecutingPlay: false});
     });
   }
 

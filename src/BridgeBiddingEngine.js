@@ -7,7 +7,10 @@ export default class BridgeBiddingEngine {
     this.bidHistory = [];
     this.prevSuitBid = {bid: {type: '', suit: '', level: 0}, bidder: ''};
   }
-
+  reset() {
+    this.bidHistory = [];
+    this.prevSuitBid = {bid: {type: '', suit: '', level: 0}, bidder: ''};
+  }
   isValidBid(bid, bidder) { // bid = {type: 'suit', suit: 'c','d','h','s','nt','pass', level= 1...7}
     if (this.bidHistory.length === 0) {
       if (bid.type === BT.PASS || bid.type === BT.SUIT) return true;

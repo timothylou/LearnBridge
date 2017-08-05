@@ -5,6 +5,8 @@ import {
   BOTPLAYCARD_REQUEST,
   NEW_GAME,
   FINISHED_TRICK,
+  INCREMENT_WHOSETURN,
+  SCREEN_RESIZE
 } from '../actions/actions';
 import {SEATS} from '../constants/Game';
 
@@ -33,7 +35,7 @@ function whoseTurn(state='',action) {
   switch (action.type) {
     case NEW_GAME:
       return action.dealer;
-    case PLAY_CARD:
+    case INCREMENT_WHOSETURN:
       return nextPlayer(state);
     case FINISHED_TRICK:
       return action.winner;
@@ -57,14 +59,18 @@ function history(state=[],action) {
 function cardsOnTable(state=[], action) {
   switch (action.type) {
     case PLAY_CARD:
-      return [
-        ...state,
-        { card: action.card, player: action.player }
-      ];
+      if (state.length === 4)
+        return [{ card: action.card, player: action.player }];
+      else
+        return [
+          ...state,
+          { card: action.card, player: action.player }
+        ];
     case NEW_GAME:
       return [];
     case FINISHED_TRICK:
-      return [];
+      //return [];
+      return state;
     default:
       return state;
   }
@@ -104,9 +110,25 @@ function isFetchingBotPlay(state={status:false,seat:'',card:{}}, action) {
         return state;
     }
 }
+const initialUIState = {
+  screenWidth: typeof window === 'object' ? window.innerWidth : null,
+  screenHeight: typeof window === 'object' ? window.innerHeight : null,
+};
+function uiReducer(state = initialUIState, action) {
+  switch(action.type) {
+    case SCREEN_RESIZE:
+      return Object.assign({}, state, {
+        screenWidth: action.width,
+        screenHeight: action.height,
+      });
+    default:
+      return state;
+  }
+}
 
 
 const rootReducer = combineReducers({
+  ui: uiReducer,
   hands,
   history,
   whoseTurn,

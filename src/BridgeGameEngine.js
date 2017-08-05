@@ -3,16 +3,27 @@ import BridgeBiddingEngine from './BridgeBiddingEngine';
 import {SEATS} from './constants/Game';
 
 
-export default class BridgeGameEngine {
-  constructor(dealer) {
-    this.dealer = dealer; // dealer = 'N', 'S', 'E', or 'W'
+class BridgeGameEngine {
+  constructor() {
+    // this.dealer = dealer; // dealer = 'N', 'S', 'E', or 'W'
     this.bidEngine = new BridgeBiddingEngine();
     this.playEngine = new BridgePlayingEngine();
     // for debug:
-    this.playEngine.setTrumpSuit('h');
+    // this.playEngine.setTrumpSuit('h');
     this.trickswon_NS = 0; // maybe can just store this in GameBoard
     this.trickswon_EW = 0; // maybe can just store this in GameBoard
     // this.playCard = this.playCard.bind(this);
+  }
+  reset() {
+    this.playEngine.reset();
+    this.bidEngine.reset();
+  }
+  setDealer(dealer) {
+    this.dealer = dealer;
+  }
+
+  setTrumpSuit(suit) {
+    this.playEngine.setTrumpSuit(suit);
   }
 
   isValidCard(card, cardsInHand) {
@@ -44,6 +55,6 @@ export default class BridgeGameEngine {
   getEWScore() {
     return this.trickswon_EW;
   }
-
-
 }
+
+export let bridgeEngine = new BridgeGameEngine();

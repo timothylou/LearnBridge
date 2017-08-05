@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import BridgeHand from './BridgeHand';
 import Deck from './Deck';
-import GameBoard from './GameBoard';
 import {SEATS} from './constants/Game';
 import SmartCard from './containers/SmartCard';
 import SmartHand from './containers/SmartHand';
