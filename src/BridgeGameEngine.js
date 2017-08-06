@@ -14,6 +14,8 @@ class BridgeGameEngine {
     this.trickswon_EW = 0; // maybe can just store this in GameBoard
     // this.playCard = this.playCard.bind(this);
   }
+  
+  /* Initialization fns */
   reset() {
     this.playEngine.reset();
     this.bidEngine.reset();
@@ -26,6 +28,24 @@ class BridgeGameEngine {
     this.playEngine.setTrumpSuit(suit);
   }
 
+  /* Bidding fns */
+  isValidBid(bid, bidder) {
+    return this.bidEngine.isValidBid(bid, bidder);
+  }
+
+  doBid(bid, bidder) {
+    this.bidEngine.addBid(bid, bidder);
+  }
+
+  isBiddingComplete() {
+    return this.bidEngine.isBiddingComplete();
+  }
+
+  getContract() {
+    return this.bidEngine.getContract();
+  }
+
+  /* Playing card fns */
   isValidCard(card, cardsInHand) {
     return this.playEngine.isValidCard(card, cardsInHand);
   }

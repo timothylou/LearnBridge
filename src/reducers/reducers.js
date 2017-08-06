@@ -6,9 +6,22 @@ import {
   NEW_GAME,
   FINISHED_TRICK,
   INCREMENT_WHOSETURN,
-  SCREEN_RESIZE
+  SCREEN_RESIZE,
+  START_PLAYING,
+  FINISH_PLAYING,
+  START_BIDDING,
+  FINISH_BIDDING,
+  DO_BID,
+  BOTBID_RECEIVE,
+  BOTBID_REQUEST,
 } from '../actions/actions';
-import {SEATS} from '../constants/Game';
+import {
+  getAPIrepr_cards
+} from '../utilfns/APIFns';
+import {
+  INGAME_VIEW
+} from '../constants/Views';
+import {SEATS, GAMESTATES} from '../constants/Game';
 
 function nextPlayer(seat) {
   switch (seat) {
@@ -43,7 +56,7 @@ function whoseTurn(state='',action) {
       return state;
   }
 }
-function history(state=[],action) {
+function playHistory(state=[],action) {
   switch (action.type) {
     case PLAY_CARD:
       return [
@@ -56,6 +69,20 @@ function history(state=[],action) {
       return state;
   }
 }
+function bidHistory(state=[], action) {
+  switch (action.type) {
+    case DO_BID:
+      return [
+        ...state,
+        action.bid
+      ];
+    case NEW_GAME:
+      return [];
+    default:
+      return state;
+  }
+}
+
 function cardsOnTable(state=[], action) {
   switch (action.type) {
     case PLAY_CARD:
@@ -75,6 +102,29 @@ function cardsOnTable(state=[], action) {
       return state;
   }
 }
+
+function handsAPIReps(
+  state = {
+    [SEATS.NORTH]: '',
+    [SEATS.EAST]: '',
+    [SEATS.SOUTH]: '',
+    [SEATS.WEST]: ''
+  },
+  action
+) {
+  switch (action.type) {
+    case NEW_GAME:
+      return {
+        [SEATS.NORTH]: getAPIrepr_cards(action.hands[SEATS.NORTH]),
+        [SEATS.SOUTH]: getAPIrepr_cards(action.hands[SEATS.SOUTH]),
+        [SEATS.EAST]: getAPIrepr_cards(action.hands[SEATS.EAST]),
+        [SEATS.WEST]: getAPIrepr_cards(action.hands[SEATS.WEST]),
+      };
+    default:
+      return state;
+  }
+}
+
 function hands(
   state = {
     [SEATS.NORTH]: [],
@@ -110,9 +160,20 @@ function isFetchingBotPlay(state={status:false,seat:'',card:{}}, action) {
         return state;
     }
 }
+function isFetchingBotBid(state={status:false,seat:'',bid:{}}, action) {
+    switch(action.type) {
+      case BOTBID_REQUEST:
+        return {status: true, seat: action.player, bid: {}};
+      case BOTBID_RECEIVE:
+        return {status: false, seat: '', card: action.bid};
+      default:
+        return state;
+    }
+}
 const initialUIState = {
   screenWidth: typeof window === 'object' ? window.innerWidth : null,
   screenHeight: typeof window === 'object' ? window.innerHeight : null,
+  currentView: INGAME_VIEW,
 };
 function uiReducer(state = initialUIState, action) {
   switch(action.type) {
@@ -125,15 +186,46 @@ function uiReducer(state = initialUIState, action) {
       return state;
   }
 }
-
+function gameState(state = GAMESTATES.BIDDING, action) {
+  switch (action.type) {
+    case START_BIDDING:
+      return GAMESTATES.BIDDING;
+    case FINISH_BIDDING:
+      return GAMESTATES.PLAYING;
+    case START_PLAYING:
+      return GAMESTATES.PLAYING;
+    case FINISH_PLAYING:
+      return GAMESTATES.RESULTS;
+    default:
+      return state;
+  }
+}
+function gameSettings(state = {}, action) {
+  switch (action.type) {
+    case NEW_GAME:
+      return {dealer: action.dealer, vulnerability: action.vulnerability};
+    case FINISH_BIDDING:
+      return Object.assign({}, state, {
+        declarer: action.declarer,
+        contract: action.contract,
+      });
+    default:
+      return state;
+  }
+}
 
 const rootReducer = combineReducers({
   ui: uiReducer,
   hands,
-  history,
+  playHistory,
+  bidHistory,
   whoseTurn,
   cardsOnTable,
   isFetchingBotPlay,
+  isFetchingBotBid,
+  handsAPIReps,
+  gameState,
+  gameSettings,
 });
 
 export default rootReducer;

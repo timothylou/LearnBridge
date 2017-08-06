@@ -4,13 +4,16 @@ import {SEATS, SUITS, RANK_VALUE_MAP} from '../constants/Game';
 import {connect} from 'react-redux';
 import Deck from '../Deck';
 import {bridgeEngine} from '../BridgeGameEngine';
-import { newGame, playCard, fetchBotPlayCard } from '../actions/actions';
+import { newGame, playCard, fetchBotPlayCard,
+  doBid, fetchBotDoBid,
+ } from '../actions/actions';
 
 class SmartPlayer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       isExecutingPlay: false,
+      isExecutingBid: false,
     };
     this.onValidCardClick = this.onValidCardClick.bind(this);
     this.isValidCardClick = this.isValidCardClick.bind(this);
@@ -25,7 +28,7 @@ class SmartPlayer extends React.Component {
 
   isValidCardClick(card) {
     // return this.props.isValidCardClick(card, this.seatDirection, this.state.cards);
-    if (this.props.isMyTurn && !this.props.dummy)
+    if (this.props.isMyTurn)
       return this.props.isValidCardToPlay(card, this.props.seat);
     else {
       console.log('SmartPlayer::isValidCardToPlay: not your turn,', this.props.seat);
@@ -77,6 +80,7 @@ class SmartPlayer extends React.Component {
     urlToGetPlay += "&s=" + shand;
     urlToGetPlay += "&e=" + ehand;
     urlToGetPlay += "&w=" + whand;
+    urlToGetPlay += "&src=eric";
     console.log(urlToGetPlay);
 
     let cardToPlay;
@@ -89,9 +93,46 @@ class SmartPlayer extends React.Component {
       this.setState({isExecutingPlay: false});
     });
   }
+  doBotBid() {
+    let urlToGetBid = "http://gibrest.bridgebase.com/u_bm/robot.php?";
+    const pov = this.props.seat;
+    urlToGetBid += "&pov=" + pov;
+    // v=vulnerability: ( N for NS, E for EW, B for both, - for none)
+    urlToGetBid += "&v=" + "-";
+    // d=dealer
+    urlToGetBid += "&d=" + "W";
+    // h=bidhistory
+    urlToGetBid += "&h=" + "1h-p-p-p";
+    const bidhist = this.props.getAPIBidHistory();
+    if (bidhist !== "")
+      urlToGetBid += "-" + bidhist;
+    // o=statehistory (is returned back unchanged for state maintenance)
+    urlToGetBid += "&o=" + "state1";
+    const nhand = this.props.APIHandReps[SEATS.NORTH];
+    const shand = this.props.APIHandReps[SEATS.SOUTH];
+    const ehand = this.props.APIHandReps[SEATS.EAST];
+    const whand = this.props.APIHandReps[SEATS.WEST];
+    urlToGetBid += "&n=" + nhand;
+    urlToGetBid += "&s=" + shand;
+    urlToGetBid += "&e=" + ehand;
+    urlToGetBid += "&w=" + whand;
+    urlToGetBid += "&src=eric";
+    console.log(urlToGetBid);
+
+    let bid;
+    this.props.dispatch(
+      fetchBotDoBid(this.props.seat, urlToGetBid)
+    ).then((bid) => {
+      console.log("finished the fetchbotdobid dispatch:", bid);
+      this.props.dispatch(doBid(bid, this.props.seat));
+      this.props.registerValidCardPlay(bid, this.props.seat);
+      this.setState({isExecutingBid: false});
+    });
+  }
 
   render() {
     console.log('Player ' + this.props.seat + ' render');
+    // need to change offsetfromleft to vary with card size
     return (
       <SmartHand
         trumpSuit='h'
@@ -100,9 +141,14 @@ class SmartPlayer extends React.Component {
         direction='horizontal'
         offsetFromLeft={15*(13-this.props.cardsInHand.length)}
         onValidCardClick={this.onValidCardClick}
-        isValidCardClick={this.props.bot ? ((a,b,c)=> {
-          console.log('SmartPlayer::isValidCardClick: ignored click on bots hand');return false;})
-          : this.isValidCardClick}
+        isValidCardClick={
+          (this.props.bot && (this.props.partnerIsBot || (!this.props.partnerIsBot && !this.props.dummy)))
+          ? ((a,b,c)=> {
+            console.log('SmartPlayer::isValidCardClick: ignored click on bots hand');
+            return false;
+          })
+          : this.isValidCardClick
+        }
       />
     );
   }
@@ -114,6 +160,8 @@ const mapStateToProps = (state, ownProps) => {
     isMyTurn: state.whoseTurn === ownProps.seat,
     isFetching: state.isFetchingBotPlay.seat === ownProps.seat && state.isFetchingBotPlay.status,
     fetchedCard: ownProps.bot ? state.isFetchingBotPlay.card : {},
+    fetchedBid: ownProps.bot ? state.isFetchingBotBid.bid : {},
+    APIHandReps: state.handsAPIReps,
   }
 };
 

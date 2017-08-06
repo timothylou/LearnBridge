@@ -1,4 +1,4 @@
-import {SUITS} from '../constants/Game';
+import {SUITS, BID_TYPES} from '../constants/Game';
 
 export function getAPIrepr_cards(cards) {
   let spades = '', hearts = '', diamonds = '', clubs = '';
@@ -30,6 +30,31 @@ export function getAPIrepr_playhistory(playHistory) {
   for (let i=0; i<playHistory.length; i++) {
     repr += playHistory[i].suit.toUpperCase() + playHistory[i].rank.toUpperCase();
     if (i != playHistory.length - 1)
+      repr += "-"
+  }
+  return repr;
+}
+
+const bidToString = (bid) => {
+  switch (bid.type) {
+    case BID_TYPES.PASS:
+      return "P";
+    case BID_TYPES.DBL:
+      return "X";
+    case BID_TYPES.RDBL:
+      return "XX";
+    case BID_TYPES.SUIT:
+      return bid.level.toString()+bid.suit;
+    default:
+      return "lol";
+  }
+}
+
+export function getAPIrepr_bidhistory(bidHistory) {
+  let repr = "";
+  for (let i=0; i<bidHistory.length; i++) {
+    repr += bidToString(bidHistory[i]);
+    if (i != bidHistory.length - 1)
       repr += "-"
   }
   return repr;

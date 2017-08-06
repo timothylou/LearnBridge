@@ -3,14 +3,17 @@ import {connect} from 'react-redux';
 import Deck from '../Deck';
 import SmartPlayer from './SmartPlayer';
 import CardsOnTable from '../components/CardsOnTable';
+import BiddingBox from '../components/BiddingBox';
+import BiddingDisplay from '../components/BiddingDisplay';
 import {bridgeEngine} from '../BridgeGameEngine';
-import {SUITS, RANKS, RANK_VALUE_MAP, SEATS} from '../constants/Game';
+import {SUITS, RANKS, RANK_VALUE_MAP, SEATS, GAMESTATES} from '../constants/Game';
 import { newGame, playCard, finishedTrick,
   clearBoard, incrementWhoseTurn,
-  screenResize
+  screenResize, startBidding, finishBidding, startPlaying, finishPlaying,
 } from '../actions/actions';
 import {sortHand} from '../utilfns/HandFns';
-import {getAPIrepr_cards, getAPIrepr_playhistory} from '../utilfns/APIFns';
+import {getAPIrepr_cards, getAPIrepr_playhistory, getAPIrepr_bidhistory
+} from '../utilfns/APIFns';
 
 class SmartTable extends React.Component {
   constructor(props) {
@@ -23,19 +26,15 @@ class SmartTable extends React.Component {
     const d = new Deck();
     d.shuffle();
     const hands=d.generateHands();
-    this.APIHandReps = {
-      [SEATS.NORTH]: getAPIrepr_cards(hands[0]),
-      [SEATS.SOUTH]: getAPIrepr_cards(hands[1]),
-      [SEATS.EAST]: getAPIrepr_cards(hands[2]),
-      [SEATS.WEST]: getAPIrepr_cards(hands[3]),
-    };
+
     this.props.dispatch(newGame( 'N', {
       'N': sortHand('h',hands[0]),
       'S': sortHand('h',hands[1]),
       'E': sortHand('h',hands[2]),
       'W': sortHand('h',hands[3])
-    }, ''));
-    // this.sleep(1);
+    }, '-'));
+    this.props.dispatch(startBidding());
+
     bridgeEngine.setDealer(this.props.dealer);
     bridgeEngine.setTrumpSuit('h');
     this.getAPIrepr_playhistory = this.getAPIrepr_playhistory.bind(this);
@@ -45,7 +44,10 @@ class SmartTable extends React.Component {
   }
 
   getAPIrepr_playhistory() {
-    return getAPIrepr_playhistory(this.props.history);
+    return getAPIrepr_playhistory(this.props.playHistory);
+  }
+  getAPIrepr_bidhistory() {
+    return getAPIrepr_bidhistory(this.props.bidHistory);
   }
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -58,6 +60,19 @@ class SmartTable extends React.Component {
       this.props.dispatch(finishedTrick(winner));
       bridgeEngine.clearBoard(); // can wait until next trick starts to clear..
       console.log('SmartTable::registerValidCardPlay: winner of round was: ' + winner);
+    }
+    else {
+      this.props.dispatch(incrementWhoseTurn());
+    }
+  }
+  registerValidBid(bid, seat) {
+    console.log('SmartTable::registerValidBid: received validated bid from', seat);
+    bridgeEngine.doBid(bid, seat);
+    if (bridgeEngine.isBiddingComplete()) {
+      const contract = bridgeEngine.getContract();
+      // this.props.dispatch(finishedTrick(winner));
+      bridgeEngine.clearBoard(); // can wait until next trick starts to clear..
+      // console.log('SmartTable::registerValidCardPlay: winner of round was: ' + winner);
     }
     else {
       this.props.dispatch(incrementWhoseTurn());
@@ -104,12 +119,12 @@ class SmartTable extends React.Component {
             dummy={false}
             partnerIsBot={false}
             partner={SEATS.SOUTH}
-            faceup={true}
+            faceup={false}
             direction={'horizontal'}
             registerValidCardPlay={this.registerValidCardPlay}
             isValidCardToPlay={this.isValidCardToPlay}
-            APIHandReps={this.APIHandReps}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
+            getAPIBidHistory={this.getAPIrepr_bidhistory}
           />
         </div>
         <div style={{
@@ -132,8 +147,8 @@ class SmartTable extends React.Component {
             direction={'horizontal'}
             registerValidCardPlay={this.registerValidCardPlay}
             isValidCardToPlay={this.isValidCardToPlay}
-            APIHandReps={this.APIHandReps}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
+            getAPIBidHistory={this.getAPIrepr_bidhistory}
           />
         </div>
         <div style={{
@@ -150,15 +165,15 @@ class SmartTable extends React.Component {
             trumpSuit='h'
             seat={SEATS.EAST}
             partner={SEATS.WEST}
-            bot={false}
+            bot={true}
             dummy={true}
             partnerIsBot={true}
-            faceup={true}
+            faceup={false}
             direction={'vertical'}
             registerValidCardPlay={this.registerValidCardPlay}
             isValidCardToPlay={this.isValidCardToPlay}
-            APIHandReps={this.APIHandReps}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
+            getAPIBidHistory={this.getAPIrepr_bidhistory}
           />
         </div>
         <div style={{
@@ -178,12 +193,12 @@ class SmartTable extends React.Component {
             bot={true}
             dummy={false}
             partnerIsBot={false}
-            faceup={true}
+            faceup={false}
             direction={'vertical'}
             registerValidCardPlay={this.registerValidCardPlay}
             isValidCardToPlay={this.isValidCardToPlay}
-            APIHandReps={this.APIHandReps}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
+            getAPIBidHistory={this.getAPIrepr_bidhistory}
           />
         </div>
         <div style={{
@@ -194,11 +209,25 @@ class SmartTable extends React.Component {
           width: '20%',
           border: '3px solid #FF0000',
         }}>
-          <CardsOnTable
+          {(this.props.gameState === GAMESTATES.BIDDING) && <CardsOnTable
             cardlist={this.props.cardsOnTable}
             cardWidth={cardWidth}
             cardHeight={cardHeight}
-          />
+          />}
+          {(this.props.gameState === GAMESTATES.PLAYING) && <BiddingDisplay
+            bidHistory={[]}
+          />}
+        </div>
+        <div style={{
+          position: 'absolute',
+          right: "1%",
+          bottom: "1%",
+        }}>
+          {(this.props.gameState === GAMESTATES.BIDDING) &&
+            <BiddingBox
+              lastLevelBid={{suit: 'h', level: 4}}
+              onBidButtonClick={(arg1)=>{console.log(arg1)}}
+            />}
         </div>
       </div>
 
@@ -208,10 +237,12 @@ class SmartTable extends React.Component {
 const mapStateToProps = (state, ownProps) => {
   return {
     hands: state.hands,
-    history: state.history,
+    playHistory: state.playHistory,
+    bidHistory: state.bidHistory,
     cardsOnTable: state.cardsOnTable,
     screenHeight: state.ui.screenHeight,
     screenWidth: state.ui.screenWidth,
+    gameState: state.gameState,
   }
 };
 
