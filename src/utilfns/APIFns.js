@@ -53,7 +53,7 @@ const bidToString = (bid) => {
 export function getAPIrepr_bidhistory(bidHistory) {
   let repr = "";
   for (let i=0; i<bidHistory.length; i++) {
-    repr += bidToString(bidHistory[i]);
+    repr += bidToString(bidHistory[i].bid);
     if (i != bidHistory.length - 1)
       repr += "-"
   }

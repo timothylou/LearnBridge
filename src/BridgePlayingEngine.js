@@ -9,7 +9,11 @@ export default class BridgePlayingEngine {
   setTrumpSuit(trumpSuit) {
     this.trumpsSuit = trumpSuit;
   }
-  reset() {  // call this after every getRoundWinner
+  reset() {
+    this.curTrickCards = [];
+    this.trumpsSuit = null;
+  }
+  clearTrick() {   // call this after every getRoundWinner
     this.curTrickCards = [];
   }
   isValidCard(card, cardsInHand) { //cardsInHand is a list of cardObjects
@@ -28,6 +32,7 @@ export default class BridgePlayingEngine {
       cardvalue: RANK_VALUE_MAP[card.rank],
       player: player
     });
+    console.log(this.curTrickCards);
   }
   isTrickOver() {
     return (this.curTrickCards.length === 4);

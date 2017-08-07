@@ -3,6 +3,7 @@ import {
   PLAY_CARD,
   BOTPLAYCARD_RECEIVE,
   BOTPLAYCARD_REQUEST,
+  SET_WHOSE_TURN,
   NEW_GAME,
   FINISHED_TRICK,
   INCREMENT_WHOSETURN,
@@ -21,7 +22,8 @@ import {
 import {
   INGAME_VIEW
 } from '../constants/Views';
-import {SEATS, GAMESTATES} from '../constants/Game';
+import {BID_TYPES, SEATS, GAMESTATES} from '../constants/Game';
+import {bridgeEngine} from '../BridgeGameEngine';
 
 function nextPlayer(seat) {
   switch (seat) {
@@ -50,8 +52,12 @@ function whoseTurn(state='',action) {
       return action.dealer;
     case INCREMENT_WHOSETURN:
       return nextPlayer(state);
-    case FINISHED_TRICK:
-      return action.winner;
+    // case FINISHED_TRICK:
+    //   return action.winner;
+    case SET_WHOSE_TURN:
+      return action.whoseTurn;
+    case FINISH_BIDDING:
+      return nextPlayer(action.declarer);
     default:
       return state;
   }
@@ -74,7 +80,7 @@ function bidHistory(state=[], action) {
     case DO_BID:
       return [
         ...state,
-        action.bid
+        {bid: action.bid, bidder: action.player}
       ];
     case NEW_GAME:
       return [];
@@ -82,7 +88,29 @@ function bidHistory(state=[], action) {
       return state;
   }
 }
-
+function biddingBoxHelpers(
+  state= {
+    lastSuitBid: {suit: '', level: 0, type: BID_TYPES.SUIT},
+    isDblValid: false,
+    isRdblValid: false,
+  }, action) {
+  switch (action.type) {
+    case NEW_GAME:
+      return {
+        lastSuitBid: {suit: '', level: 0, type: BID_TYPES.SUIT},
+        isDblValid: false,
+        isRdblValid: false,
+      };
+    case DO_BID: //assumes south is always the perspective of the human bidder
+      return {
+        lastSuitBid: bridgeEngine.getLastSuitBid(),
+        isDblValid: bridgeEngine.isValidBid({type: BID_TYPES.DBL}, SEATS.SOUTH),
+        isRdblValid: bridgeEngine.isValidBid({type: BID_TYPES.RDBL}, SEATS.SOUTH)
+      };
+    default:
+      return state;
+  }
+}
 function cardsOnTable(state=[], action) {
   switch (action.type) {
     case PLAY_CARD:
@@ -152,6 +180,8 @@ function hands(
 }
 function isFetchingBotPlay(state={status:false,seat:'',card:{}}, action) {
     switch(action.type) {
+      case NEW_GAME:
+        return {status: false, seat: '', card: {}};
       case BOTPLAYCARD_REQUEST:
         return {status: true, seat: action.player, card: {}};
       case BOTPLAYCARD_RECEIVE:
@@ -162,10 +192,12 @@ function isFetchingBotPlay(state={status:false,seat:'',card:{}}, action) {
 }
 function isFetchingBotBid(state={status:false,seat:'',bid:{}}, action) {
     switch(action.type) {
+      case NEW_GAME:
+        return {status: false, seat: '', bid: {}};
       case BOTBID_REQUEST:
         return {status: true, seat: action.player, bid: {}};
       case BOTBID_RECEIVE:
-        return {status: false, seat: '', card: action.bid};
+        return {status: false, seat: '', bid: action.bid};
       default:
         return state;
     }
@@ -186,8 +218,27 @@ function uiReducer(state = initialUIState, action) {
       return state;
   }
 }
+function tricksTaken(state= {NS: 0, EW: 0}, action) {
+  switch (action.type) {
+    case NEW_GAME:
+      return {NS: 0, EW: 0};
+    case FINISHED_TRICK:
+      if (action.winner === SEATS.NORTH || action.winner === SEATS.SOUTH)
+        return Object.assign({}, state, {
+          NS: state.NS + 1,
+        });
+      else
+        return Object.assign({}, state, {
+          EW: state.EW + 1,
+        });
+    default:
+      return state;
+  }
+}
 function gameState(state = GAMESTATES.BIDDING, action) {
   switch (action.type) {
+    case NEW_GAME:
+      return GAMESTATES.BIDDING;
     case START_BIDDING:
       return GAMESTATES.BIDDING;
     case FINISH_BIDDING:
@@ -217,6 +268,7 @@ function gameSettings(state = {}, action) {
 const rootReducer = combineReducers({
   ui: uiReducer,
   hands,
+  biddingBoxHelpers,
   playHistory,
   bidHistory,
   whoseTurn,
@@ -226,6 +278,7 @@ const rootReducer = combineReducers({
   handsAPIReps,
   gameState,
   gameSettings,
+  tricksTaken,
 });
 
 export default rootReducer;

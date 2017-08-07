@@ -3,7 +3,7 @@ import Deck from '../Deck';
 import {sortHand} from '../utilfns/HandFns';
 import {getAPIrepr_cards} from '../utilfns/APIFns';
 import SmartTable from './SmartTable';
-import { newGame } from '../actions/actions';
+import { newGame, finishPlaying } from '../actions/actions';
 import { connect } from 'react-redux';
 import {INGAME_VIEW} from '../constants/Views';
 import {SEATS, BID_TYPES} from '../constants/Game';
@@ -12,7 +12,9 @@ import BiddingBox from '../components/BiddingBox';
 import BiddingDisplay from '../components/BiddingDisplay';
 
 class ViewController extends Component {
-
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
   render() {
     let view = <div/>;
     switch(this.props.currentView) {
@@ -28,16 +30,19 @@ class ViewController extends Component {
       <button
         type="button"
         onClick={()=>{
-          bridgeEngine.reset();
           const d = new Deck();
           d.shuffle();
           const hands=d.generateHands();
-          this.props.dispatch(newGame( 'N', {
-            'N': sortHand('h',hands[0]),
-            'S': sortHand('h',hands[1]),
-            'E': sortHand('h',hands[2]),
-            'W': sortHand('h',hands[3])
-          }, ''));
+          this.props.dispatch(finishPlaying());
+          this.sleep(500).then(()=> {
+            bridgeEngine.reset();
+            this.props.dispatch(newGame( 'N', {
+              'N': sortHand('h',hands[0]),
+              'S': sortHand('h',hands[1]),
+              'E': sortHand('h',hands[2]),
+              'W': sortHand('h',hands[3])
+            }, ''));
+          })
         }}
       >
         New Game

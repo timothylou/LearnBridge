@@ -14,7 +14,7 @@ export const START_BIDDING = 'START_BIDDING';
 export const START_PLAYING = 'START_PLAYING';
 export const FINISH_BIDDING = 'FINISH_BIDDING';
 export const FINISH_PLAYING = 'FINISH_PLAYING';
-
+export const SET_WHOSE_TURN = 'SET_WHOSE_TURN';
 export const PLAY_CARD = 'PLAY_CARD';
 export const BOTPLAYCARD_REQUEST = 'BOTPLAYCARD_REQUEST';
 export const BOTPLAYCARD_RECEIVE = 'BOTPLAYCARD_RECEIVE';
@@ -39,6 +39,10 @@ export const finishBidding = (declarer, contract) => ({
   type: FINISH_BIDDING,
   declarer,
   contract,
+});
+export const setWhoseTurn = (whoseTurn) => ({
+  type: SET_WHOSE_TURN,
+  whoseTurn
 });
 export const startPlaying = () => ({
   type: START_PLAYING,
@@ -129,7 +133,7 @@ export function fetchBotPlayCard (player, url) {
 }
 
 // anotha flippin THUNK action creator!
-export function fetchBotDoBid (player, url) {
+export function fetchBotBid (player, url) {
   return function (dispatch)  {
     dispatch(requestBotBid(player));
     let bid;
@@ -158,7 +162,7 @@ export function fetchBotDoBid (player, url) {
         bid = {type: BID_TYPES.PASS};
       else if (rawBid.toUpperCase() === 'X')
         bid = {type: BID_TYPES.DBL};
-      else if (rawBid.toUpperCase() === 'R')
+      else if (rawBid.toUpperCase() === 'XX')
         bid = {type: BID_TYPES.RDBL};
       else if (rawBid.length === 2) { // normal suit bid
         let bidSuit = '';
@@ -185,7 +189,7 @@ export function fetchBotDoBid (player, url) {
       }
       else throw 'not recognized bid type??';
 
-      dispatch(receiveBotPlayCard(player, bid));
+      dispatch(receiveBotBid(player, bid));
       return bid;
     });
   };

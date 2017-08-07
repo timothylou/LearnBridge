@@ -14,7 +14,7 @@ class BridgeGameEngine {
     this.trickswon_EW = 0; // maybe can just store this in GameBoard
     // this.playCard = this.playCard.bind(this);
   }
-  
+
   /* Initialization fns */
   reset() {
     this.playEngine.reset();
@@ -45,6 +45,10 @@ class BridgeGameEngine {
     return this.bidEngine.getContract();
   }
 
+  getLastSuitBid() {
+    return this.bidEngine.getPrevSuitBid().bid;
+  }
+
   /* Playing card fns */
   isValidCard(card, cardsInHand) {
     return this.playEngine.isValidCard(card, cardsInHand);
@@ -63,6 +67,10 @@ class BridgeGameEngine {
     if (winner === SEATS.NORTH || winner === SEATS.SOUTH) this.trickswon_NS++;
     else this.trickswon_EW++;
     return winner;
+  }
+
+  clearTrick() {
+    this.playEngine.clearTrick();
   }
 
   clearBoard() {

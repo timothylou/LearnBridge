@@ -99,7 +99,11 @@ export default class BridgeBiddingEngine {
   getBidHistory() {
     return this.bidHistory;
   }
+  getPrevSuitBid() {
+    return this.prevSuitBid;
+  }
   addBid(bid, bidder) { // bidder = 'N', 'E', 'S', 'W', call isValidBid before calling addBid
+
     this.bidHistory.push({
       bid: bid,
       bidder: bidder
@@ -110,6 +114,7 @@ export default class BridgeBiddingEngine {
         bidder: bidder
       };
     }
+    console.log("==============>",bid, bidder,this.prevSuitBid);
   }
   undoBid() {
     if (this.bidHistory.length > 0) {

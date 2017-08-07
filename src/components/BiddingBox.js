@@ -16,7 +16,7 @@ const compareSuitBids = (bid1, bid2) => {
   return 0;
 }
 
-const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidButtonClick }) => {
+const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick }) => {
   let buttonTable = [];
   for (let i=1; i<=7; i++) {
     buttonTable.push(
@@ -31,7 +31,7 @@ const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidButtonClick })
                 }
                 onClick={() => {
                   console.log("BiddingBox:",i,elem);
-                  onBidButtonClick({type: BID_TYPES.SUIT, level: i, suit: elem});
+                  onBidClick({type: BID_TYPES.SUIT, level: i, suit: elem});
                 }}
               >
                 {i.toString()+BID_SUIT_UNICODE_MAP[elem]}
@@ -44,21 +44,43 @@ const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidButtonClick })
   }
   const passButton = (
     <th key={'pass'} colSpan="2">
-      <button className="passBidButton">
+      <button
+        className="passBidButton"
+        onClick={() => {
+          console.log("BiddingBox: PASS clicked");
+          onBidClick({type: BID_TYPES.PASS});
+        }}
+      >
         Pass
       </button>
     </th>
   );
   const dblButton = (
     <th key={'dbl'}>
-      <button className="levelBidButton">
+      <button
+        className={
+          isDblValid ? "clickableDblButton" : "invalidUnclickableDblButton"
+        }
+        onClick={() => {
+          console.log("BiddingBox: DBL clicked");
+          onBidClick({type: BID_TYPES.DBL});
+        }}
+      >
         X
       </button>
     </th>
   );
   const rdblButton = (
     <th key={'rdbl'}>
-      <button className="levelBidButton">
+      <button
+        className={
+          isRdblValid ? "clickableDblButton" : "invalidUnclickableDblButton"
+        }
+        onClick={() => {
+          console.log("BiddingBox: RDBL clicked");
+          onBidClick({type: BID_TYPES.RDBL});
+        }}
+      >
         XX
       </button>
     </th>

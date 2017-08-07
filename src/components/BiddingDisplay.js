@@ -20,6 +20,7 @@ const BiddingDisplay = ({bidHistory}) => {
   let tableRowsList = [];
   let offset = 0;
   let currentRow = [];
+  console.log(bidHistory);
   if (bidHistory.length >= 1) {
     if (bidHistory[0].bidder === SEATS.NORTH) ;
     else if (bidHistory[0].bidder === SEATS.EAST) currentRow.push(<th key={'nf'}/>);
@@ -57,6 +58,7 @@ const BiddingDisplay = ({bidHistory}) => {
   return (
     <table style={{
       border: "3px solid pink",
+      width: '100%',
     }}>
       <tbody>
         <tr>

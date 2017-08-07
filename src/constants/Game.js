@@ -13,6 +13,13 @@ export const SEATS = {
   WEST: 'W'
 };
 
+export const PARTNERS = {
+  [SEATS.NORTH]: SEATS.SOUTH,
+  [SEATS.SOUTH]: SEATS.NORTH,
+  [SEATS.EAST]: SEATS.WEST,
+  [SEATS.WEST]: SEATS.EAST,
+};
+
 /* Constants related to a card */
 export const SUITS = {
   SPADES: 's',
