@@ -1,28 +1,25 @@
 import {combineReducers} from 'redux';
 import {
   PLAY_CARD,
-  BOTPLAYCARD_RECEIVE,
-  BOTPLAYCARD_REQUEST,
-  SET_WHOSE_TURN,
+  BOTPLAYCARD_RECEIVE, BOTPLAYCARD_REQUEST,
   NEW_GAME,
   FINISHED_TRICK,
-  INCREMENT_WHOSETURN,
+  INCREMENT_WHOSETURN, SET_WHOSE_TURN,
   SCREEN_RESIZE,
-  START_PLAYING,
-  FINISH_PLAYING,
-  START_BIDDING,
-  FINISH_BIDDING,
+  START_PLAYING, FINISH_PLAYING,
+  START_BIDDING, FINISH_BIDDING,
   DO_BID,
-  BOTBID_RECEIVE,
-  BOTBID_REQUEST,
+  BOTBID_RECEIVE, BOTBID_REQUEST,
+  RESULTS_RECEIVE, RESULTS_REQUEST,
 } from '../actions/actions';
 import {
   getAPIrepr_cards
 } from '../utilfns/APIFns';
+import { sortHand } from '../utilfns/HandFns';
 import {
   INGAME_VIEW
 } from '../constants/Views';
-import {BID_TYPES, SEATS, GAMESTATES} from '../constants/Game';
+import {BID_TYPES, BID_SUITS, SEATS, GAMESTATES} from '../constants/Game';
 import {bridgeEngine} from '../BridgeGameEngine';
 
 function nextPlayer(seat) {
@@ -169,11 +166,20 @@ function hands(
       });
     case NEW_GAME:
       return Object.assign({}, state, {
-        [SEATS.NORTH]: action.hands[SEATS.NORTH],
-        [SEATS.EAST]: action.hands[SEATS.EAST],
-        [SEATS.SOUTH]: action.hands[SEATS.SOUTH],
-        [SEATS.WEST]: action.hands[SEATS.WEST]
+        [SEATS.NORTH]: sortHand(BID_SUITS.SPADES, action.hands[SEATS.NORTH]),
+        [SEATS.EAST]: sortHand(BID_SUITS.SPADES, action.hands[SEATS.EAST]),
+        [SEATS.SOUTH]: sortHand(BID_SUITS.SPADES, action.hands[SEATS.SOUTH]),
+        [SEATS.WEST]: sortHand(BID_SUITS.SPADES, action.hands[SEATS.WEST])
       })
+    case FINISH_BIDDING:
+      if (action.contract.suit === BID_SUITS.NOTRUMP)
+        return state;
+      return Object.assign({}, state, {
+        [SEATS.NORTH]: sortHand(action.contract.suit, state[SEATS.NORTH]),
+        [SEATS.EAST]: sortHand(action.contract.suit, state[SEATS.EAST]),
+        [SEATS.SOUTH]: sortHand(action.contract.suit, state[SEATS.SOUTH]),
+        [SEATS.WEST]: sortHand(action.contract.suit, state[SEATS.WEST]),
+      });
     default:
       return state;
   }
@@ -198,6 +204,18 @@ function isFetchingBotBid(state={status:false,seat:'',bid:{}}, action) {
         return {status: true, seat: action.player, bid: {}};
       case BOTBID_RECEIVE:
         return {status: false, seat: '', bid: action.bid};
+      default:
+        return state;
+    }
+}
+function isFetchingResults(state={status:false,score:0,perspective:'NS'}, action) {
+    switch(action.type) {
+      case NEW_GAME:
+        return {status: false, score: 0, perspective: 'NS'};
+      case RESULTS_REQUEST:
+        return {status: true, score: 0, perspective: 'NS'};
+      case RESULTS_RECEIVE:
+        return {status: false, score: action.score, perspective: 'NS'};
       default:
         return state;
     }
@@ -275,6 +293,7 @@ const rootReducer = combineReducers({
   cardsOnTable,
   isFetchingBotPlay,
   isFetchingBotBid,
+  isFetchingResults,
   handsAPIReps,
   gameState,
   gameSettings,

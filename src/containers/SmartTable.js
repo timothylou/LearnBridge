@@ -10,10 +10,14 @@ import {SUITS, RANKS, RANK_VALUE_MAP, SEATS, GAMESTATES} from '../constants/Game
 import { newGame, playCard, finishedTrick, setWhoseTurn,
   clearBoard, incrementWhoseTurn, doBid,
   screenResize, startBidding, finishBidding, startPlaying, finishPlaying,
+  fetchResults,
 } from '../actions/actions';
 import {sortHand} from '../utilfns/HandFns';
 import {getAPIrepr_cards, getAPIrepr_playhistory, getAPIrepr_bidhistory
 } from '../utilfns/APIFns';
+import ScoreContractBox from '../components/ScoreContractBox';
+import GameStatusBox from '../components/GameStatusBox';
+import ResultsDisplay from '../components/ResultsDisplay';
 
 class SmartTable extends React.Component {
   constructor(props) {
@@ -28,10 +32,10 @@ class SmartTable extends React.Component {
     const hands=d.generateHands();
 
     this.props.dispatch(newGame( 'N', {
-      'N': sortHand('h',hands[0]),
-      'S': sortHand('h',hands[1]),
-      'E': sortHand('h',hands[2]),
-      'W': sortHand('h',hands[3])
+      'N': hands[0],
+      'S': hands[1],
+      'E': hands[2],
+      'W': hands[3]
     }, '-'));
     this.props.dispatch(startBidding());
 
@@ -57,6 +61,25 @@ class SmartTable extends React.Component {
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
+  getresultsurl() {
+    let urlToGetPlay = "http://gibrest.bridgebase.com/u_bm/robot.php?";
+    const pov = SEATS.NORTH; // doesnt matter who
+    urlToGetPlay += "&pov=" + pov;
+    urlToGetPlay += "&v=" + "-";
+    urlToGetPlay += "&d=" + this.props.dealer;
+    urlToGetPlay += "&h=" + this.getAPIrepr_bidhistory() + "-" + this.getAPIrepr_playhistory();
+    urlToGetPlay += "&o=" + "state1";
+    const nhand = this.props.APIHandReps[SEATS.NORTH];
+    const shand = this.props.APIHandReps[SEATS.SOUTH];
+    const ehand = this.props.APIHandReps[SEATS.EAST];
+    const whand = this.props.APIHandReps[SEATS.WEST];
+    urlToGetPlay += "&n=" + nhand;
+    urlToGetPlay += "&s=" + shand;
+    urlToGetPlay += "&e=" + ehand;
+    urlToGetPlay += "&w=" + whand;
+    urlToGetPlay += "&src=eric";
+    return urlToGetPlay;
+  }
   registerValidCardPlay(card, seat) {
     console.log('SmartTable::registerValidCardPlay: received validated card to play from', seat);
     bridgeEngine.playCard(card, seat);
@@ -69,6 +92,7 @@ class SmartTable extends React.Component {
       if (beforeFinishedTrickNumTricks + 1 === 13) {
         console.log('game over');
         this.props.dispatch(finishPlaying());
+        this.props.dispatch(fetchResults(this.getresultsurl()));
       }
       else {
         this.props.dispatch(setWhoseTurn(winner));
@@ -249,10 +273,17 @@ class SmartTable extends React.Component {
             cardWidth={cardWidth}
             cardHeight={cardHeight}
           />}
-          {(this.props.gameState === GAMESTATES.BIDDING) && <BiddingDisplay
-            bidHistory={this.props.bidHistory}
-          />}
+          {(this.props.gameState === GAMESTATES.BIDDING) &&
+            <BiddingDisplay
+              bidHistory={this.props.bidHistory}
+            />}
+          {(this.props.gameState === GAMESTATES.RESULTS) &&
+            <ResultsDisplay
+              score={this.props.score}
+              stillfetching={this.props.isFetchingScore}
+            />}
         </div>
+
         <div style={{
           position: 'absolute',
           right: "1%",
@@ -262,6 +293,33 @@ class SmartTable extends React.Component {
             <SmartBiddingBox
               onValidBidClick={this.onValidBidClick}
               isValidBidClick={this.isValidBidClick}
+              isMyTurn={this.props.whoseTurn === SEATS.SOUTH}
+            />}
+        </div>
+        <div style={{
+          position: 'absolute',
+          right: "1%",
+          bottom: "1%",
+          border: '3px solid orange',
+        }}>
+          {this.props.gameState === GAMESTATES.PLAYING &&
+            <ScoreContractBox
+              scoreNS={this.props.tricksNS}
+              scoreEW={this.props.tricksEW}
+              contract={this.props.contract}
+              declarer={this.props.declarer}
+            />}
+        </div>
+        <div style={{
+          position: 'absolute',
+          right: "1%",
+          top : "1%",
+          border: '3px solid green',
+        }}>
+          <GameStatusBox/>
+          {(this.props.gameState === GAMESTATES.PLAYING) &&
+            <BiddingDisplay
+              bidHistory={this.props.bidHistory}
             />}
         </div>
       </div>
@@ -272,6 +330,7 @@ class SmartTable extends React.Component {
 const mapStateToProps = (state, ownProps) => {
   return {
     hands: state.hands,
+    APIHandReps: state.handsAPIReps,
     playHistory: state.playHistory,
     bidHistory: state.bidHistory,
     cardsOnTable: state.cardsOnTable,
@@ -285,6 +344,8 @@ const mapStateToProps = (state, ownProps) => {
     contract: state.gameSettings.contract,
     tricksNS: state.tricksTaken.NS,
     tricksEW: state.tricksTaken.EW,
+    score: state.isFetchingResults.score,
+    isFetchingScore: state.isFetchingResults.status,
   }
 };
 

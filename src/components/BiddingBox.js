@@ -16,7 +16,7 @@ const compareSuitBids = (bid1, bid2) => {
   return 0;
 }
 
-const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick }) => {
+const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick, grayAll }) => {
   let buttonTable = [];
   for (let i=1; i<=7; i++) {
     buttonTable.push(
@@ -26,7 +26,7 @@ const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick }) => {
             <th key={i.toString()+elem}>
               <button
                 className={
-                  compareSuitBids(lastLevelBid, {level: i, suit: elem}) < 0 ?
+                  (compareSuitBids(lastLevelBid, {level: i, suit: elem}) < 0 && !grayAll) ?
                   "clickableLevelBidButton" : "invalidUnclickableLevelBidButton"
                 }
                 onClick={() => {
@@ -45,7 +45,9 @@ const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick }) => {
   const passButton = (
     <th key={'pass'} colSpan="2">
       <button
-        className="passBidButton"
+        className={
+          !grayAll ? "clickablePassBidButton" : "unclickablePassBidButton"
+        }
         onClick={() => {
           console.log("BiddingBox: PASS clicked");
           onBidClick({type: BID_TYPES.PASS});
@@ -59,7 +61,7 @@ const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick }) => {
     <th key={'dbl'}>
       <button
         className={
-          isDblValid ? "clickableDblButton" : "invalidUnclickableDblButton"
+          (isDblValid && !grayAll) ? "clickableDblButton" : "invalidUnclickableDblButton"
         }
         onClick={() => {
           console.log("BiddingBox: DBL clicked");
@@ -74,7 +76,7 @@ const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick }) => {
     <th key={'rdbl'}>
       <button
         className={
-          isRdblValid ? "clickableDblButton" : "invalidUnclickableDblButton"
+          (isRdblValid && !grayAll) ? "clickableDblButton" : "invalidUnclickableDblButton"
         }
         onClick={() => {
           console.log("BiddingBox: RDBL clicked");

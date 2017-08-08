@@ -37,10 +37,10 @@ class ViewController extends Component {
           this.sleep(500).then(()=> {
             bridgeEngine.reset();
             this.props.dispatch(newGame( 'N', {
-              'N': sortHand('h',hands[0]),
-              'S': sortHand('h',hands[1]),
-              'E': sortHand('h',hands[2]),
-              'W': sortHand('h',hands[3])
+              'N': hands[0],
+              'S': hands[1],
+              'E': hands[2],
+              'W': hands[3],
             }, ''));
           })
         }}

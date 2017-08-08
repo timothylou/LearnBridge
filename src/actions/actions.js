@@ -21,6 +21,8 @@ export const BOTPLAYCARD_RECEIVE = 'BOTPLAYCARD_RECEIVE';
 export const DO_BID = 'DO_BID';
 export const BOTBID_REQUEST = 'BOTBID_REQUEST';
 export const BOTBID_RECEIVE = 'BOTBID_RECEIVE';
+export const RESULTS_REQUEST = 'RESULTS_REQUEST';
+export const RESULTS_RECEIVE = 'RESULTS_RECEIVE';
 export const NEW_GAME = 'NEW_GAME';
 export const FINISHED_TRICK = 'FINISHED_TRICK';
 export const CLEAR_BOARD = 'CLEAR_BOARD';
@@ -67,7 +69,13 @@ export const receiveBotBid = (player, bid) => ({
   player,
   bid
 });
-
+export const requestResults = () => ({
+  type: RESULTS_REQUEST,
+});
+export const receiveResults = (score) => ({
+  type: RESULTS_RECEIVE,
+  score,
+});
 export const playCard = (card, player) => ({
   type: PLAY_CARD,
   player,
@@ -194,4 +202,41 @@ export function fetchBotBid (player, url) {
     });
   };
 }
-//
+
+// a third frackin THUNK action creator!
+export function fetchResults(url) { // returns resulting score from NS perspective
+  return function (dispatch)  {
+    dispatch(requestResults());
+    let result;
+    console.log(url);
+    return fetch(url).then(
+      response => response.text(),
+      error => console.log('An error occurred.', error)
+    )
+    .then(text => {
+      console.log(text);
+      const retxml = text;
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(retxml,"text/xml");
+      const rets = xmlDoc.getElementsByTagName("r");
+      let rawResults = "";
+      for (let i=0; i < rets.length; i++) {
+        if (rets[i].getAttribute('type') === 'result') {
+          rawResults = rets[i].getAttribute('result');
+          console.log("fetchResults dispatch: fetched result: " + rawResults);
+        }
+      }
+      if (rawResults === "") {
+        console.log("fetchResults dispatch: something went wrong.");
+        return;
+      }
+      if (rawResults.substring(0,3) === 'N/S')
+        result = parseInt(rawResults.substring(4,rawResults.length));
+      else if (rawResults.substring(0,3) === 'E/W')
+        result = -1*parseInt(rawResults.substring(4,rawResults.length));
+      else throw 'not recognized result??';
+      dispatch(receiveResults(result));
+      return result;
+    });
+  }
+}

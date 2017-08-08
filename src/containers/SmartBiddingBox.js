@@ -24,6 +24,7 @@ class SmartBiddingBox extends React.Component {
         lastLevelBid={this.props.lastSuitBid}
         isDblValid={this.props.isDblValid}
         isRdblValid={this.props.isRdblValid}
+        grayAll={!this.props.isMyTurn}
         onBidClick={this.onBidClick}
       />
     );
