@@ -1,12 +1,20 @@
 import {BID_TYPES, BID_SUITS} from '../constants/Game';
+import {
+  INGAME_VIEW, HOME_SCREEN,
+} from '../constants/Views';
 
 /* UI actions */
 export const SCREEN_RESIZE = 'SCREEN_RESIZE';
+export const CHANGE_VIEW = 'CHANGE_VIEW';
 
 export const screenResize = (width, height) => ({
   type: SCREEN_RESIZE,
   width,
   height
+});
+export const changeView = (nextView) => ({
+  type: CHANGE_VIEW,
+  nextView,
 });
 
 /* Gameplay actions */

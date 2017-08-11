@@ -3,29 +3,22 @@ import Deck from '../Deck';
 import {sortHand} from '../utilfns/HandFns';
 import {getAPIrepr_cards} from '../utilfns/APIFns';
 import SmartTable from './SmartTable';
-import { newGame, finishPlaying } from '../actions/actions';
+import { newGame, finishPlaying, changeView } from '../actions/actions';
 import { connect } from 'react-redux';
-import {INGAME_VIEW} from '../constants/Views';
+import {INGAME_VIEW, HOME_SCREEN} from '../constants/Views';
 import {SEATS, BID_TYPES} from '../constants/Game';
 import {bridgeEngine} from '../BridgeGameEngine';
 import BiddingBox from '../components/BiddingBox';
 import BiddingDisplay from '../components/BiddingDisplay';
+import TopNavigatingBar from '../components/TopNavigatingBar';
+import SmartHomeScreen from './SmartHomeScreen';
+
 
 class ViewController extends Component {
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
   render() {
-    let view = <div/>;
-    switch(this.props.currentView) {
-      case INGAME_VIEW:
-        view = (<SmartTable
-          dealer='N'
-        />);
-        break;
-      default:
-        break;
-    }
     const newgamebutton = (
       <button
         type="button"
@@ -48,23 +41,70 @@ class ViewController extends Component {
         New Game
       </button>
     );
+    let view = <div/>;
+    switch(this.props.currentView) {
+      case INGAME_VIEW:
+        view = (<div>
+            <div>
+              <TopNavigatingBar
+                onHomeClick={()=>{this.props.dispatch(changeView(HOME_SCREEN));}}
+              />
+            </div>
+            <div style={{
+              position: 'fixed',
+              top: '6%',
+              width: '100%',
+              height: '94%'
+            }}>
+              {newgamebutton}
+              <SmartTable
+                dealer='N'
+              />
+            </div>
+          </div>);
+        break;
+      case HOME_SCREEN:
+        const img = require('../icons/greenbackground.jpg');
+        view = (
+          <div
+            className="homescreen"
+            style={{
+              backgroundImage: `url(${img})`,
+          }}
+          >
+            <SmartHomeScreen/>
+          </div>
+        );
+        break;
+      default:
+        break;
+    }
+
     return (
       <div>
-        {newgamebutton}
         {view}
       </div>
     );
     // return (
-    //   <BiddingBox/>
+    //   <SmartHomeScreen/>
     // );
     // return (
-    //   <BiddingDisplay
-    //     bidHistory={[{bidder: 'E', bid:{type: BID_TYPES.PASS}},
-    //     {bidder: 'S', bid:{type: BID_TYPES.SUIT, suit: 's', level: 2}},
-    //     {bidder: 'W', bid:{type: BID_TYPES.DBL}}
-    //   ]}
-    //   />
+    //   <div>
+    //     <div>
+    //       <TopNavigatingBar/>
+    //     </div>
+    //     <div style={{
+    //       position: 'fixed',
+    //       top: '6%',
+    //       width: '100%',
+    //       height: '94%'
+    //     }}>
+    //       {newgamebutton}
+    //       {view}
+    //     </div>
+    //   </div>
     // );
+
   }
 }
 

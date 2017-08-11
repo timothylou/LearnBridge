@@ -92,7 +92,10 @@ class SmartTable extends React.Component {
       if (beforeFinishedTrickNumTricks + 1 === 13) {
         console.log('game over');
         this.props.dispatch(finishPlaying());
-        this.props.dispatch(fetchResults(this.getresultsurl()));
+        this.sleep(10).then(()=> {
+          this.props.dispatch(fetchResults(this.getresultsurl()));
+        });
+
       }
       else {
         this.props.dispatch(setWhoseTurn(winner));

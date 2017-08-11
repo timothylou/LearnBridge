@@ -5,7 +5,7 @@ import {
   NEW_GAME,
   FINISHED_TRICK,
   INCREMENT_WHOSETURN, SET_WHOSE_TURN,
-  SCREEN_RESIZE,
+  SCREEN_RESIZE, CHANGE_VIEW,
   START_PLAYING, FINISH_PLAYING,
   START_BIDDING, FINISH_BIDDING,
   DO_BID,
@@ -17,7 +17,7 @@ import {
 } from '../utilfns/APIFns';
 import { sortHand } from '../utilfns/HandFns';
 import {
-  INGAME_VIEW
+  INGAME_VIEW, HOME_SCREEN,
 } from '../constants/Views';
 import {BID_TYPES, BID_SUITS, SEATS, GAMESTATES} from '../constants/Game';
 import {bridgeEngine} from '../BridgeGameEngine';
@@ -223,7 +223,7 @@ function isFetchingResults(state={status:false,score:0,perspective:'NS'}, action
 const initialUIState = {
   screenWidth: typeof window === 'object' ? window.innerWidth : null,
   screenHeight: typeof window === 'object' ? window.innerHeight : null,
-  currentView: INGAME_VIEW,
+  currentView: HOME_SCREEN,
 };
 function uiReducer(state = initialUIState, action) {
   switch(action.type) {
@@ -231,6 +231,10 @@ function uiReducer(state = initialUIState, action) {
       return Object.assign({}, state, {
         screenWidth: action.width,
         screenHeight: action.height,
+      });
+    case CHANGE_VIEW:
+      return Object.assign({}, state, {
+        currentView: action.nextView,
       });
     default:
       return state;
