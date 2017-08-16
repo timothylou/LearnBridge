@@ -3,9 +3,21 @@ import {connect} from 'react-redux';
 import Deck from '../Deck';
 import SmartPlayer from './SmartPlayer';
 import CardsOnTable from '../components/CardsOnTable';
-import BridgeGameEngine from '../BridgeGameEngine';
-import {SUITS, RANKS, RANK_VALUE_MAP, SEATS} from '../constants/Game';
-import { newGame, playCard, finishedTrick } from '../actions/actions';
+import SmartBiddingBox from './SmartBiddingBox';
+import BiddingDisplay from '../components/BiddingDisplay';
+import {bridgeEngine} from '../BridgeGameEngine';
+import {SUITS, RANKS, RANK_VALUE_MAP, SEATS, GAMESTATES} from '../constants/Game';
+import { newGame, playCard, finishedTrick, setWhoseTurn,
+  clearBoard, incrementWhoseTurn, doBid,
+  screenResize, startBidding, finishBidding, startPlaying, finishPlaying,
+  fetchResults, startedTurn, completedTurn,
+} from '../actions/actions';
+import {sortHand} from '../utilfns/HandFns';
+import {getAPIrepr_cards, getAPIrepr_playhistory, getAPIrepr_bidhistory
+} from '../utilfns/APIFns';
+import ScoreContractBox from '../components/ScoreContractBox';
+import GameStatusBox from '../components/GameStatusBox';
+import ResultsDisplay from '../components/ResultsDisplay';
 
 class SmartTable extends React.Component {
   constructor(props) {
@@ -18,118 +30,129 @@ class SmartTable extends React.Component {
     const d = new Deck();
     d.shuffle();
     const hands=d.generateHands();
-    this.APIHandReps = {
-      [SEATS.NORTH]: this.getAPIrepr_cards(hands[0]),
-      [SEATS.SOUTH]: this.getAPIrepr_cards(hands[1]),
-      [SEATS.EAST]: this.getAPIrepr_cards(hands[2]),
-      [SEATS.WEST]: this.getAPIrepr_cards(hands[3]),
-    };
-    const { dispatch } = this.props;
-    dispatch(newGame( 'N', {
-      'N': this.sort('h',hands[0]),
-      'S': this.sort('h',hands[1]),
-      'E': this.sort('h',hands[2]),
-      'W': this.sort('h',hands[3])
-    }, ''));
-    // this.sleep(1);
-    this.bridgeEngine = new BridgeGameEngine(this.props.dealer);
-    this.getAPIrepr_cards = this.getAPIrepr_cards.bind(this);
+    bridgeEngine.reset();
+    this.props.dispatch(newGame( 'N', {
+      'N': hands[0],
+      'S': hands[1],
+      'E': hands[2],
+      'W': hands[3]
+    }, '-'));
+    this.props.dispatch(startBidding());
+
+    bridgeEngine.setDealer(this.props.dealer);
+
     this.getAPIrepr_playhistory = this.getAPIrepr_playhistory.bind(this);
+    this.getAPIrepr_bidhistory = this.getAPIrepr_bidhistory.bind(this);
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
     this.registerValidCardPlay = this.registerValidCardPlay.bind(this);
-    this.isValidCardClick = this.isValidCardClick.bind(this);
+    this.registerValidBid = this.registerValidBid.bind(this);
+    this.isValidCardToPlay = this.isValidCardToPlay.bind(this);
+    this.isValidBid = this.isValidBid.bind(this);
+    this.isValidBidClick = this.isValidBidClick.bind(this);
+    this.onValidBidClick = this.onValidBidClick.bind(this);
   }
-  _sortSuitByRank(cardA, cardB) {
-    return -(RANK_VALUE_MAP[cardA.rank] - RANK_VALUE_MAP[cardB.rank]);
-  }
-  sort(trumpsSuit, cards) {
-    let sortedcards = [];
-    let clubs = [];
-    let diamonds = [];
-    let hearts = [];
-    let spades = [];
 
-    for (let i=0; i < cards.length; i++) {
-      switch(cards[i].suit) {
-        case 'c':
-          clubs.push(cards[i]);
-          break;
-        case 'd':
-          diamonds.push(cards[i]);
-          break;
-        case 'h':
-          hearts.push(cards[i]);
-          break;
-        case 's':
-          spades.push(cards[i]);
-          break;
-        default:
-          throw 'InvalidSuitError';
-      }
-    }
-    clubs.sort(this._sortSuitByRank);
-    diamonds.sort(this._sortSuitByRank);
-    hearts.sort(this._sortSuitByRank);
-    spades.sort(this._sortSuitByRank);
-
-    if (trumpsSuit==='c') sortedcards = clubs.concat(diamonds,spades,hearts);
-    else if (trumpsSuit==='d') sortedcards = diamonds.concat(clubs,hearts,spades);
-    else if (trumpsSuit==='h') sortedcards = hearts.concat(spades,diamonds,clubs);
-    else if (trumpsSuit==='s') sortedcards = spades.concat(hearts,clubs,diamonds);
-    console.log(sortedcards);
-    return sortedcards;
-  }
-  getAPIrepr_cards(cards) {
-    let spades = '', hearts = '', diamonds = '', clubs = '';
-
-    for (let i=0; i<cards.length; i++) {
-      switch (cards[i].suit) {
-        case SUITS.SPADES:
-          spades += cards[i].rank;
-          break;
-        case SUITS.HEARTS:
-          hearts += cards[i].rank;
-          break;
-        case SUITS.DIAMONDS:
-          diamonds += cards[i].rank;
-          break;
-        case SUITS.CLUBS:
-          clubs += cards[i].rank;
-          break;
-        default:
-          console.log('dont go here please');
-          break;
-      }
-    }
-    return spades + '.' + hearts + '.' + diamonds + '.' + clubs;
-  }
   getAPIrepr_playhistory() {
-    let repr = "";
-    for (let i=0; i<this.props.history.length; i++) {
-      repr += this.props.history[i].suit.toUpperCase() + this.props.history[i].rank.toUpperCase();
-      if (i != this.props.history.length - 1)
-        repr += "-"
-    }
-    return repr;
+    return getAPIrepr_playhistory(this.props.playHistory);
+  }
+  getAPIrepr_bidhistory() {
+    return getAPIrepr_bidhistory(this.props.bidHistory);
   }
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
+  getresultsurl() {
+    let urlToGetPlay = "http://gibrest.bridgebase.com/u_bm/robot.php?";
+    const pov = SEATS.NORTH; // doesnt matter who
+    urlToGetPlay += "&pov=" + pov;
+    urlToGetPlay += "&v=" + "-";
+    urlToGetPlay += "&d=" + this.props.dealer;
+    urlToGetPlay += "&h=" + this.getAPIrepr_bidhistory() + "-" + this.getAPIrepr_playhistory();
+    urlToGetPlay += "&o=" + "state1";
+    const nhand = this.props.APIHandReps[SEATS.NORTH];
+    const shand = this.props.APIHandReps[SEATS.SOUTH];
+    const ehand = this.props.APIHandReps[SEATS.EAST];
+    const whand = this.props.APIHandReps[SEATS.WEST];
+    urlToGetPlay += "&n=" + nhand;
+    urlToGetPlay += "&s=" + shand;
+    urlToGetPlay += "&e=" + ehand;
+    urlToGetPlay += "&w=" + whand;
+    urlToGetPlay += "&src=eric";
+    return urlToGetPlay;
+  }
   registerValidCardPlay(card, seat) {
     console.log('SmartTable::registerValidCardPlay: received validated card to play from', seat);
-    this.bridgeEngine.playCard(card, seat);
-    if (this.bridgeEngine.isTrickOver()) {
-      const winner = this.bridgeEngine.getRoundWinner();
+    bridgeEngine.playCard(card, seat);
+
+    if (bridgeEngine.isTrickOver()) {
+      const winner = bridgeEngine.getRoundWinner();
+      bridgeEngine.clearTrick();
+      const beforeFinishedTrickNumTricks = this.props.tricksEW + this.props.tricksNS;
       this.props.dispatch(finishedTrick(winner));
-      this.bridgeEngine.clearBoard(); // can wait until next trick starts to clear..
       console.log('SmartTable::registerValidCardPlay: winner of round was: ' + winner);
+      if (beforeFinishedTrickNumTricks + 1 === 13) {
+        console.log('game over');
+        this.props.dispatch(finishPlaying());
+        this.sleep(10).then(()=> {
+          this.props.dispatch(fetchResults(this.getresultsurl()));
+          this.props.dispatch(completedTurn(seat));
+        });
+
+      }
+      else {
+        this.props.dispatch(setWhoseTurn(winner));
+        this.props.dispatch(completedTurn(seat));
+      }
+    }
+    else {
+      this.props.dispatch(incrementWhoseTurn());
+      this.props.dispatch(completedTurn(seat));
     }
   }
-  isValidCardClick(card, seat) {
-    const isValid = this.bridgeEngine.isValidCard(card, this.props.hands[seat]);
-    if (isValid) console.log('SmartTable::isValidCardClick: VALID');
-    else console.log('SmartTable::isValidCardClick: INVALID');
+  registerValidBid(bid, seat) {
+    console.log('SmartTable::registerValidBid: received validated bid from', seat);
+    if (bridgeEngine.isBiddingComplete()) {
+      const contract = bridgeEngine.getContract();
+      bridgeEngine.setTrumpSuit(contract.suit);
+      this.props.dispatch(finishBidding(contract.declarer, {
+        suit: contract.suit,
+        level: contract.level
+      }));
+      this.props.dispatch(startPlaying());
+      this.props.dispatch(completedTurn(seat));
+      console.log('SmartTable::registerValidBid: final bidding contract:', contract);
+    }
+    else {
+      this.props.dispatch(incrementWhoseTurn());
+      this.props.dispatch(completedTurn(seat));
+    }
+  }
+  isValidCardToPlay(card, seat) {
+    const isValid = bridgeEngine.isValidCard(card, this.props.hands[seat]);
+    if (isValid) console.log('SmartTable::isValidCardToPlay: VALID');
+    else console.log('SmartTable::isValidCardToPlay: INVALID');
     return isValid;
+  }
+  isValidBid(bid, seat) {
+    const isValid = bridgeEngine.isValidBid(bid, seat);
+    if (isValid) console.log('SmartTable::isValidBid: VALID');
+    else console.log('SmartTable::isValidBid: INVALID');
+    return isValid;
+  }
+  isValidBidClick(bid, seat) {
+    if (this.props.whoseTurn === seat) {
+      console.log("SmartTable::isValidBidClick: it is my turn");
+      return this.isValidBid(bid, seat);
+    }
+    else {
+      console.log("SmartTable::isValidBidClick: it is not my turn", seat, this.props.whoseTurn);
+      return false;
+    }
+  }
+  onValidBidClick(bid, seat) {
+    bridgeEngine.doBid(bid, seat);
+    this.props.dispatch(doBid(bid, seat));
+    this.registerValidBid(bid, seat);
   }
   componentDidMount() {
     this.updateWindowDimensions();
@@ -139,112 +162,109 @@ class SmartTable extends React.Component {
     window.removeEventListener('resize',this.updateWindowDimensions);
   }
   updateWindowDimensions() {
-    this.setState({wwidth: window.innerWidth, wheight: window.innerHeight });
+    // this.setState({wwidth: window.innerWidth, wheight: window.innerHeight });
+    this.props.dispatch(screenResize(window.innerWidth, window.innerHeight));
     //console.log('win width: ' + this.state.wwidth.toString());
     //console.log('win height: ' + this.state.wheight.toString());
   }
   render() {
     console.log('SmartTable render');
-    console.log(this.state.wwidth*0.5);
-    console.log(this.state.wwidth);
+    const cardHeight = (this.props.screenHeight - this.props.screenHeight%50)/5;
+    const cardWidth = cardHeight*7/10;
     return (
-      <div>
+      <div style={{minWidth:"1000px"}}>
         <div style={{
           position: 'absolute',
           top: '1%',
           left: '50%',
-          marginLeft: -(140+30*12)/2,
-          height: 200+10,
-          width: (140+30*12)+6,
+          marginLeft: -(cardWidth+cardWidth/5*12)/2,
+          height: cardHeight+10,
+          width: (cardWidth+cardWidth/5*12)+6,
           border: '3px solid #FF0000',
         }}>
           <SmartPlayer
             trumpSuit='h'
             seat={SEATS.NORTH}
             bot={true}
-            dummy={false}
             partnerIsBot={false}
-            partner={SEATS.SOUTH}
-            faceup={true}
             direction={'horizontal'}
             registerValidCardPlay={this.registerValidCardPlay}
-            isValidCardClick={this.isValidCardClick}
-            APIHandReps={this.APIHandReps}
+            registerValidBid={this.registerValidBid}
+            isValidCardToPlay={this.isValidCardToPlay}
+            isValidBid={this.isValidBid}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
+            getAPIBidHistory={this.getAPIrepr_bidhistory}
           />
         </div>
         <div style={{
           position: 'absolute',
           bottom: '1%',
           left: '50%',
-          height: 200+10,
-          width: (140+30*12)+6,
-          marginLeft: -(140+30*12)/2,
+          height: cardHeight+10,
+          width: (cardWidth+cardWidth/5*12)+6,
+          marginLeft: -(cardWidth+cardWidth/5*12)/2,
           border: '3px solid #FF0000',
         }}>
           <SmartPlayer
             trumpSuit='h'
             seat={SEATS.SOUTH}
-            partner={SEATS.NORTH}
             bot={false}
-            dummy={false}
             partnerIsBot={true}
-            faceup={true}
             direction={'horizontal'}
             registerValidCardPlay={this.registerValidCardPlay}
-            isValidCardClick={this.isValidCardClick}
-            APIHandReps={this.APIHandReps}
+            registerValidBid={this.registerValidBid}
+            isValidCardToPlay={this.isValidCardToPlay}
+            isValidBid={this.isValidBid}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
+            getAPIBidHistory={this.getAPIrepr_bidhistory}
           />
         </div>
         <div style={{
           position: 'absolute',
           top: '50%',
           right: '1%',
-          height: 200+10,
-          width: (140+30*12)+6,
-          marginTop: -(200)/2,
+          height: cardHeight+10,
+          width: (cardWidth+cardWidth/5*12)+6,
+          marginTop: -(cardHeight)/2,
           border: '3px solid #FF0000',
           transform: 'rotate(0deg)',
         }}>
           <SmartPlayer
             trumpSuit='h'
             seat={SEATS.EAST}
-            partner={SEATS.WEST}
-            bot={false}
-            dummy={true}
-            partnerIsBot={false}
-            faceup={true}
+            bot={true}
+            partnerIsBot={true}
             direction={'vertical'}
             registerValidCardPlay={this.registerValidCardPlay}
-            isValidCardClick={this.isValidCardClick}
-            APIHandReps={this.APIHandReps}
+            registerValidBid={this.registerValidBid}
+            isValidCardToPlay={this.isValidCardToPlay}
+            isValidBid={this.isValidBid}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
+            getAPIBidHistory={this.getAPIrepr_bidhistory}
           />
         </div>
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '1%',
-          height: 200+10,
-          width: (140+30*12)+6,
-          marginTop: -(200)/2,
+          height: cardHeight+10,
+          width: (cardWidth+cardWidth/5*12)+6,
+          marginTop: -(cardHeight)/2,
           border: '3px solid #FF0000',
           transform: 'rotate(0deg)',
         }}>
           <SmartPlayer
             trumpSuit='h'
             seat={SEATS.WEST}
-            partner={SEATS.EAST}
-            bot={false}
-            dummy={false}
-            partnerIsBot={false}
-            faceup={true}
+            bot={true}
+            partnerIsBot={true}
             direction={'vertical'}
             registerValidCardPlay={this.registerValidCardPlay}
-            isValidCardClick={this.isValidCardClick}
-            APIHandReps={this.APIHandReps}
+            registerValidBid={this.registerValidBid}
+            isValidCardToPlay={this.isValidCardToPlay}
+            isValidBid={this.isValidBid}
             getAPIPlayHistory={this.getAPIrepr_playhistory}
+            getAPIBidHistory={this.getAPIrepr_bidhistory}
           />
         </div>
         <div style={{
@@ -255,9 +275,59 @@ class SmartTable extends React.Component {
           width: '20%',
           border: '3px solid #FF0000',
         }}>
-          <CardsOnTable
+          {(this.props.gameState === GAMESTATES.PLAYING) && <CardsOnTable
             cardlist={this.props.cardsOnTable}
-          />
+            cardWidth={cardWidth}
+            cardHeight={cardHeight}
+          />}
+          {(this.props.gameState === GAMESTATES.BIDDING) &&
+            <BiddingDisplay
+              bidHistory={this.props.bidHistory}
+            />}
+          {(this.props.gameState === GAMESTATES.RESULTS) &&
+            <ResultsDisplay
+              score={this.props.score}
+              stillfetching={this.props.isFetchingScore}
+            />}
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          right: "1%",
+          bottom: "1%",
+        }}>
+          {(this.props.gameState === GAMESTATES.BIDDING) &&
+            <SmartBiddingBox
+              onValidBidClick={this.onValidBidClick}
+              isValidBidClick={this.isValidBidClick}
+              isMyTurn={this.props.whoseTurn === SEATS.SOUTH}
+            />}
+        </div>
+        <div style={{
+          position: 'absolute',
+          right: "1%",
+          bottom: "1%",
+          border: '3px solid orange',
+        }}>
+          {this.props.gameState === GAMESTATES.PLAYING &&
+            <ScoreContractBox
+              scoreNS={this.props.tricksNS}
+              scoreEW={this.props.tricksEW}
+              contract={this.props.contract}
+              declarer={this.props.declarer}
+            />}
+        </div>
+        <div style={{
+          position: 'absolute',
+          right: "1%",
+          top : "1%",
+          border: '3px solid green',
+        }}>
+          <GameStatusBox/>
+          {(this.props.gameState === GAMESTATES.PLAYING) &&
+            <BiddingDisplay
+              bidHistory={this.props.bidHistory}
+            />}
         </div>
       </div>
 
@@ -267,8 +337,22 @@ class SmartTable extends React.Component {
 const mapStateToProps = (state, ownProps) => {
   return {
     hands: state.hands,
-    history: state.history,
-    cardsOnTable: state.cardsOnTable
+    APIHandReps: state.handsAPIReps,
+    playHistory: state.playHistory,
+    bidHistory: state.bidHistory,
+    cardsOnTable: state.cardsOnTable,
+    screenHeight: state.ui.screenHeight,
+    screenWidth: state.ui.screenWidth,
+    gameState: state.gameState,
+    whoseTurn: state.whoseTurn,
+    dealer: state.gameSettings.dealer,
+    vulnerability: state.gameSettings.vulnerability,
+    declarer: state.gameSettings.declarer,
+    contract: state.gameSettings.contract,
+    tricksNS: state.tricksTaken.NS,
+    tricksEW: state.tricksTaken.EW,
+    score: state.isFetchingResults.score,
+    isFetchingScore: state.isFetchingResults.status,
   }
 };
 

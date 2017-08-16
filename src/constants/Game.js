@@ -1,3 +1,10 @@
+/* Game state constants */
+export const GAMESTATES = {
+  BIDDING: 'BIDDING',
+  PLAYING: 'PLAYING',
+  RESULTS: 'RESULTS',
+  PAUSED:  'PAUSED',
+};
 
 /* Constants related to player */
 export const SEATS = {
@@ -5,6 +12,13 @@ export const SEATS = {
   SOUTH: 'S',
   EAST: 'E',
   WEST: 'W'
+};
+
+export const PARTNERS = {
+  [SEATS.NORTH]: SEATS.SOUTH,
+  [SEATS.SOUTH]: SEATS.NORTH,
+  [SEATS.EAST]: SEATS.WEST,
+  [SEATS.WEST]: SEATS.EAST,
 };
 
 /* Constants related to a card */
@@ -39,5 +53,16 @@ export const BID_SUITS = {
   NOTRUMP: 'nt'
 };
 export const BID_SUIT_ORDER_MAP = {
-  CLUBS: 1, DIAMONDS: 2, HEARTS: 3, SPADES: 4, NOTRUMP: 5
+  [BID_SUITS.CLUBS]: 1,
+  [BID_SUITS.DIAMONDS]: 2,
+  [BID_SUITS.HEARTS]: 3,
+  [BID_SUITS.SPADES]: 4,
+  [BID_SUITS.NOTRUMP]: 5
+};
+export const BID_SUIT_UNICODE_MAP = {
+  [BID_SUITS.SPADES]: '\u2660',
+  [BID_SUITS.HEARTS]: '\u2665',
+  [BID_SUITS.DIAMONDS]: '\u2666',
+  [BID_SUITS.CLUBS]: '\u2663',
+  [BID_SUITS.NOTRUMP]: 'NT',
 };

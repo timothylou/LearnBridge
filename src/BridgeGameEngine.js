@@ -3,18 +3,53 @@ import BridgeBiddingEngine from './BridgeBiddingEngine';
 import {SEATS} from './constants/Game';
 
 
-export default class BridgeGameEngine {
-  constructor(dealer) {
-    this.dealer = dealer; // dealer = 'N', 'S', 'E', or 'W'
+class BridgeGameEngine {
+  constructor() {
+    // this.dealer = dealer; // dealer = 'N', 'S', 'E', or 'W'
     this.bidEngine = new BridgeBiddingEngine();
     this.playEngine = new BridgePlayingEngine();
     // for debug:
-    this.playEngine.setTrumpSuit('h');
+    // this.playEngine.setTrumpSuit('h');
     this.trickswon_NS = 0; // maybe can just store this in GameBoard
     this.trickswon_EW = 0; // maybe can just store this in GameBoard
     // this.playCard = this.playCard.bind(this);
   }
 
+  /* Initialization fns */
+  reset() {
+    this.playEngine.reset();
+    this.bidEngine.reset();
+  }
+  setDealer(dealer) {
+    this.dealer = dealer;
+  }
+
+  setTrumpSuit(suit) {
+    this.playEngine.setTrumpSuit(suit);
+  }
+
+  /* Bidding fns */
+  isValidBid(bid, bidder) {
+    return this.bidEngine.isValidBid(bid, bidder);
+  }
+
+  doBid(bid, bidder) {
+    this.bidEngine.addBid(bid, bidder);
+  }
+
+  isBiddingComplete() {
+    return this.bidEngine.isBiddingComplete();
+  }
+
+  getContract() {
+    return this.bidEngine.getContract();
+  }
+
+  getLastSuitBid() {
+    return this.bidEngine.getPrevSuitBid().bid;
+  }
+
+  /* Playing card fns */
   isValidCard(card, cardsInHand) {
     return this.playEngine.isValidCard(card, cardsInHand);
   }
@@ -34,6 +69,10 @@ export default class BridgeGameEngine {
     return winner;
   }
 
+  clearTrick() {
+    this.playEngine.clearTrick();
+  }
+
   clearBoard() {
     this.playEngine.reset();
   }
@@ -44,6 +83,6 @@ export default class BridgeGameEngine {
   getEWScore() {
     return this.trickswon_EW;
   }
-
-
 }
+
+export let bridgeEngine = new BridgeGameEngine();

@@ -7,7 +7,10 @@ export default class BridgeBiddingEngine {
     this.bidHistory = [];
     this.prevSuitBid = {bid: {type: '', suit: '', level: 0}, bidder: ''};
   }
-
+  reset() {
+    this.bidHistory = [];
+    this.prevSuitBid = {bid: {type: '', suit: '', level: 0}, bidder: ''};
+  }
   isValidBid(bid, bidder) { // bid = {type: 'suit', suit: 'c','d','h','s','nt','pass', level= 1...7}
     if (this.bidHistory.length === 0) {
       if (bid.type === BT.PASS || bid.type === BT.SUIT) return true;
@@ -96,7 +99,11 @@ export default class BridgeBiddingEngine {
   getBidHistory() {
     return this.bidHistory;
   }
+  getPrevSuitBid() {
+    return this.prevSuitBid;
+  }
   addBid(bid, bidder) { // bidder = 'N', 'E', 'S', 'W', call isValidBid before calling addBid
+
     this.bidHistory.push({
       bid: bid,
       bidder: bidder
@@ -107,6 +114,7 @@ export default class BridgeBiddingEngine {
         bidder: bidder
       };
     }
+    console.log("==============>",bid, bidder,this.prevSuitBid);
   }
   undoBid() {
     if (this.bidHistory.length > 0) {

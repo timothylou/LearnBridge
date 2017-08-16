@@ -19,6 +19,8 @@ class SmartHand extends React.Component {
     }
   }
   render() {
+    const cardHeight = (this.props.screenHeight - this.props.screenHeight%50)/5;
+    const cardWidth = cardHeight*7/10;
     const reactcardslist = this.props.rawcardslist.map((card, idx) => {
       return (
           <SmartCard
@@ -28,8 +30,19 @@ class SmartHand extends React.Component {
             key={card.suit+card.rank}
             onClick={this.onCardClick}
             faceup={this.props.faceup}
+            cardbackToUse={this.props.cardbackToUse}
             direction={this.props.direction}
+            hoverable={this.props.hoverable}
             offsetFromLeft={0}
+            imgstyle={{
+              width: cardWidth,
+              height: cardHeight
+            }}
+            divstyle={{
+              width: cardWidth,
+              height: cardHeight,
+              left: cardWidth/5*idx
+            }}
           />
       );
     });
@@ -38,8 +51,8 @@ class SmartHand extends React.Component {
         position: 'absolute',
         bottom: 0,
         left: this.props.offsetFromLeft,
-        height: '200px',
-        width: (140+30*(this.props.rawcardslist.length-1)).toString() + 'px',
+        height: cardHeight,
+        width: (cardWidth+cardWidth/5*(this.props.rawcardslist.length-1)).toString() + 'px',
         border: '3px solid #73AD21',
         transform: 'rotate(0deg)',
       }}>
@@ -51,7 +64,10 @@ class SmartHand extends React.Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    rawcardslist: state.hands[ownProps.seat]
+    rawcardslist: state.hands[ownProps.seat],
+    screenWidth: state.ui.screenWidth,
+    screenHeight: state.ui.screenHeight,
+    cardbackToUse: state.activeCardbackID,
   }
 };
 // export default SmartHand;

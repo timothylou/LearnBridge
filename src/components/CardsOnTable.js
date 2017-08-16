@@ -25,8 +25,11 @@ const CardsOnTable_divstyles = {
     right: 0,
   }
 }
-export default function CardsOnTable(props) {
-  const reactcardslist = props.cardlist.map((elem, idx) => {
+const CardsOnTable = ({cardlist, cardHeight, cardWidth }) => {
+  const reactcardslist = cardlist.map((elem, idx) => {
+    const marginElem = (elem.player === SEATS.NORTH || elem.player === SEATS.SOUTH) ?
+    {marginLeft: -1*cardWidth/2} : {marginTop: -1*cardHeight/2};
+    console.log(marginElem);
     return (
       <Card
         rank={elem.card.rank}
@@ -37,7 +40,16 @@ export default function CardsOnTable(props) {
         faceup={true}
         direction={elem.card.direction}
         offsetFromLeft={0}
-        divstyle={CardsOnTable_divstyles[elem.player]}
+        divstyle={{
+          ...CardsOnTable_divstyles[elem.player],
+          ...marginElem,
+          width: cardWidth,
+          height: cardHeight,
+        }}
+        imgstyle={{
+          height: cardHeight,
+          width: cardWidth,
+        }}
       />
     );
   });
@@ -58,3 +70,4 @@ export default function CardsOnTable(props) {
     </div>
   );
 }
+export default CardsOnTable;
