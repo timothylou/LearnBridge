@@ -59,6 +59,7 @@ const BiddingDisplay = ({bidHistory}) => {
     <table style={{
       border: "3px solid pink",
       width: '100%',
+      color: 'white',
     }}>
       <tbody>
         <tr>

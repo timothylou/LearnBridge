@@ -5,7 +5,7 @@ const HomeScreen = ({onPlayGameClick, onGotoStoreClick}) => {
 
   const playGameButton = (
     <button
-      className="clickablePassBidButton"
+      className="clickableStartPlayingButton"
       onClick={()=>{
         console.log('u clicked the playGameButton');
         onPlayGameClick();
@@ -16,7 +16,7 @@ const HomeScreen = ({onPlayGameClick, onGotoStoreClick}) => {
   );
   const gotoStoreButton = (
     <button
-      className="clickablePassBidButton"
+      className="clickableGoToStoreButton"
       onClick={()=>{
         console.log('u clicked the gotoStoreButton');
         onGotoStoreClick();
@@ -36,13 +36,24 @@ const HomeScreen = ({onPlayGameClick, onGotoStoreClick}) => {
           width: '100%'
         }}
       >
-
-        {"Let\'s Play Bridge!!!!!!!"}
+        {"Bridge Buddies"}
       </div>
-      <div>
+      <div
+        style={{
+          position: 'absolute',
+          top: '35%',
+          left: '40%',
+        }}
+      >
         {playGameButton}
       </div>
-      <div>
+      <div
+        style={{
+          position: 'absolute',
+          top: '45%',
+          left: '40%',
+        }}
+      >
         {gotoStoreButton}
       </div>
     </div>

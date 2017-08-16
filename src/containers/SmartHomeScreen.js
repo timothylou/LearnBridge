@@ -2,10 +2,10 @@ import HomeScreen from '../components/HomeScreen';
 import React from 'react';
 import {connect} from 'react-redux';
 import {
-  INGAME_VIEW, HOME_SCREEN
+  INGAME_VIEW, HOME_SCREEN, STORE_VIEW,
 } from '../constants/Views';
 import {
-  changeView,
+  changeView, newGame
 } from '../actions/actions';
 
 class SmartHomeScreen extends React.Component {
@@ -18,7 +18,7 @@ class SmartHomeScreen extends React.Component {
     this.props.dispatch(changeView(INGAME_VIEW));
   }
   onGotoStoreClick() {
-
+    this.props.dispatch(changeView(STORE_VIEW));
   }
   render() {
 

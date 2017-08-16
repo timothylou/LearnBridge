@@ -4,11 +4,11 @@ import {SUITS, RANKS, RANK_VALUE_MAP} from '../constants/Game';
 
 const Card =
 ({ rank, suit, faceup, zindex, direction, onClick, isMouseOver,
-  onMouseOver, onMouseLeave, divstyle, imgstyle}) => {
+  onMouseOver, onMouseLeave, divstyle, imgstyle, cardbackToUse}) => {
   const value = RANK_VALUE_MAP[rank];
   const cardimg = faceup ?
   require('../cardimages/'+value.toString()+suit.toUpperCase()+'.png')
-  : require('../cardimages/back_card.gif');
+  : require('../storeimages/cardbacks/'+cardbackToUse+'.png');
   const _divstyle = {
     position: 'absolute',
     left: 30*zindex,

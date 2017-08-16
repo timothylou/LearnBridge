@@ -2,7 +2,7 @@ import {combineReducers} from 'redux';
 import {
   PLAY_CARD,
   BOTPLAYCARD_RECEIVE, BOTPLAYCARD_REQUEST,
-  NEW_GAME,
+  NEW_GAME, PAUSE_GAME,
   FINISHED_TRICK,
   INCREMENT_WHOSETURN, SET_WHOSE_TURN,
   SCREEN_RESIZE, CHANGE_VIEW,
@@ -11,6 +11,10 @@ import {
   DO_BID,
   BOTBID_RECEIVE, BOTBID_REQUEST,
   RESULTS_RECEIVE, RESULTS_REQUEST,
+  TURN_START, TURN_COMPLETE,
+  ADD_COINS, SUB_COINS,
+  PURCHASED_ITEM,
+  CHANGE_ACTIVE_CARDBACK, CHANGE_ACTIVE_CHARACTER
 } from '../actions/actions';
 import {
   getAPIrepr_cards
@@ -42,7 +46,16 @@ function removeCard(cardlist, card) {
     return (c.suit !== card.suit || c.rank !== card.rank);
   }));
 }
-
+function turnCompletionStatus(state={player: '', status: false}, action) {
+  switch (action.type) {
+    case TURN_START:
+      return {player: action.player, status: false};
+    case TURN_COMPLETE:
+      return {player: action.player, status: true};
+    default:
+      return state;
+  }
+}
 function whoseTurn(state='',action) {
   switch (action.type) {
     case NEW_GAME:
@@ -257,6 +270,45 @@ function tricksTaken(state= {NS: 0, EW: 0}, action) {
       return state;
   }
 }
+function coins(state=0, action) {
+  switch (action.type) {
+    case ADD_COINS:
+      return state + action.qty;
+    case SUB_COINS:
+      return (state >= action.qty) ? (state - action.qty) : 0;
+    default:
+      return state;
+  }
+}
+function purchasedItems(state={cardback: [], character: []}, action) {
+  switch (action.type) {
+    case PURCHASED_ITEM:
+      return Object.assign({}, state, {
+        [action.itemType]: [
+          ...state[action.itemType],
+          action.itemID
+        ]
+      });
+    default:
+      return state;
+  }
+}
+function activeCardbackID(state='Blue', action) {
+  switch (action.type) {
+    case CHANGE_ACTIVE_CARDBACK:
+      return action.cardback;
+    default:
+      return state;
+  }
+}
+function activeCharacterID(state='1', action) {
+  switch (action.type) {
+    case CHANGE_ACTIVE_CHARACTER:
+      return action.character;
+    default:
+      return state;
+  }
+}
 function gameState(state = GAMESTATES.BIDDING, action) {
   switch (action.type) {
     case NEW_GAME:
@@ -269,6 +321,8 @@ function gameState(state = GAMESTATES.BIDDING, action) {
       return GAMESTATES.PLAYING;
     case FINISH_PLAYING:
       return GAMESTATES.RESULTS;
+    case PAUSE_GAME:
+      return GAMESTATES.PAUSED;
     default:
       return state;
   }
@@ -298,10 +352,15 @@ const rootReducer = combineReducers({
   isFetchingBotPlay,
   isFetchingBotBid,
   isFetchingResults,
+  turnCompletionStatus,
   handsAPIReps,
   gameState,
   gameSettings,
   tricksTaken,
+  coins,
+  purchasedItems,
+  activeCardbackID,
+  activeCharacterID,
 });
 
 export default rootReducer;

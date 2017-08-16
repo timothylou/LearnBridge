@@ -3,6 +3,7 @@ export const GAMESTATES = {
   BIDDING: 'BIDDING',
   PLAYING: 'PLAYING',
   RESULTS: 'RESULTS',
+  PAUSED:  'PAUSED',
 };
 
 /* Constants related to player */

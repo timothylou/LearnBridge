@@ -6,8 +6,9 @@ import {connect} from 'react-redux';
 import Deck from '../Deck';
 import {bridgeEngine} from '../BridgeGameEngine';
 import { newGame, playCard, fetchBotPlayCard,
-  doBid, fetchBotBid,
+  doBid, fetchBotBid, startedTurn, completedTurn,
  } from '../actions/actions';
+import {getAPIrepr_playhistory, getAPIrepr_bidhistory} from '../utilfns/APIFns';
 
 class SmartPlayer extends React.Component {
   constructor(props) {
@@ -16,12 +17,15 @@ class SmartPlayer extends React.Component {
       isExecutingPlay: false,
       isExecutingBid: false,
     };
+    this.isExecutingPlay = false;
+    this.isExecutingBid = false;
     this.onValidCardClick = this.onValidCardClick.bind(this);
     this.isValidCardClick = this.isValidCardClick.bind(this);
   }
 
   onValidCardClick(card) {
     console.log('SmartPlayer::onValidCardClick: received validated click');
+    this.props.dispatch(startedTurn(this.props.seat));
     this.props.dispatch(playCard(card, this.props.seat));
     this.props.registerValidCardPlay(card, this.props.seat);
 
@@ -47,16 +51,24 @@ class SmartPlayer extends React.Component {
     if (this.props.gameState === GAMESTATES.PLAYING) {
       if (((this.props.bot && !this.props.amIDummy) || (this.props.partnerIsBot && this.props.amIDummy))
       && (!this.props.isFetchingPlay && this.props.isMyTurn && !this.state.isExecutingPlay))  {
+      // if (((this.props.bot && !this.props.amIDummy) || (this.props.partnerIsBot && this.props.amIDummy))
+      // && (!this.props.isFetchingPlay && this.props.isMyTurn && !this.isExecutingPlay))  {
         console.log('SmartPlayer::componentDidMount: calling doBotPlay');
+        this.props.dispatch(startedTurn(this.props.seat));
         this.setState({isExecutingPlay: true});
+        this.isExecutingPlay = true;
         this.doBotPlay();
       }
     }
     else if (this.props.gameState === GAMESTATES.BIDDING) {
       if (this.props.bot && !this.props.isFetchingBid &&
         this.props.isMyTurn && !this.state.isExecutingBid)  {
+      // if (this.props.bot && !this.props.isFetchingBid &&
+      //   this.props.isMyTurn && !this.isExecutingBid)  {
         console.log('SmartPlayer::componentDidMount: calling doBotBid');
+        this.props.dispatch(startedTurn(this.props.seat));
         this.setState({isExecutingBid: true});
+        this.isExecutingBid = true;
         this.doBotBid();
       }
     }
@@ -68,16 +80,24 @@ class SmartPlayer extends React.Component {
     if (this.props.gameState === GAMESTATES.PLAYING) {
       if (((this.props.bot && !this.props.amIDummy) || (this.props.partnerIsBot && this.props.amIDummy))
       && (!this.props.isFetchingPlay && this.props.isMyTurn && !this.state.isExecutingPlay))  {
+      // if (((this.props.bot && !this.props.amIDummy) || (this.props.partnerIsBot && this.props.amIDummy))
+      // && (!this.props.isFetchingPlay && this.props.isMyTurn && !this.isExecutingPlay))  {
         console.log('SmartPlayer::componentDidUpdate: calling doBotPlay');
+        this.props.dispatch(startedTurn(this.props.seat));
         this.setState({isExecutingPlay: true});
+        this.isExecutingPlay = true;
         this.doBotPlay();
       }
     }
     else if (this.props.gameState === GAMESTATES.BIDDING) {
       if (this.props.bot && !this.props.isFetchingBid &&
         this.props.isMyTurn && !this.state.isExecutingBid) {
+      // if (this.props.bot && !this.props.isFetchingBid &&
+      //   this.props.isMyTurn && !this.isExecutingBid) {
         console.log('SmartPlayer::componentDidUpdate: calling doBotBid');
+        this.props.dispatch(startedTurn(this.props.seat));
         this.setState({isExecutingBid: true});
+        this.isExecutingBid = true;
         this.doBotBid();
       }
     }
@@ -92,8 +112,8 @@ class SmartPlayer extends React.Component {
     // d=dealer
     urlToGetPlay += "&d=" + this.props.dealer;
     // h=bidhistory-playhistory
-    urlToGetPlay += "&h=" + this.props.getAPIBidHistory();
-    const playhist = this.props.getAPIPlayHistory();
+    urlToGetPlay += "&h=" + getAPIrepr_bidhistory(this.props.bidHistory);
+    const playhist = getAPIrepr_playhistory(this.props.playHistory);
     if (playhist !== "")
       urlToGetPlay += "-" + playhist;
     // o=statehistory (is returned back unchanged for state maintenance)
@@ -117,6 +137,7 @@ class SmartPlayer extends React.Component {
       this.props.dispatch(playCard(card, this.props.seat));
       this.props.registerValidCardPlay(card, this.props.seat);
       this.setState({isExecutingPlay: false});
+      this.isExecutingPlay = false;
     });
   }
   doBotBid() {
@@ -128,7 +149,8 @@ class SmartPlayer extends React.Component {
     // d=dealer
     urlToGetBid += "&d=" + this.props.dealer;
     // h=bidhistory-playhistory
-    const bidhist = this.props.getAPIBidHistory();
+    const bidhist = getAPIrepr_bidhistory(this.props.bidHistory);
+    console.log("======================>", bidhist);
     urlToGetBid += "&h=" + bidhist;
     // o=statehistory (is returned back unchanged for state maintenance)
     urlToGetBid += "&o=" + "state1";
@@ -152,6 +174,7 @@ class SmartPlayer extends React.Component {
       this.props.dispatch(doBid(bid, this.props.seat));
       this.props.registerValidBid(bid, this.props.seat);
       this.setState({isExecutingBid: false});
+      this.isExecutingBid = false;
     });
   }
 
@@ -162,6 +185,13 @@ class SmartPlayer extends React.Component {
       <SmartHand
         trumpSuit='h'
         seat={this.props.seat}
+        hoverable={
+          this.props.gameState === GAMESTATES.PLAYING
+          &&
+          ((this.props.seat === SEATS.SOUTH)
+          ||
+          (this.props.seat === SEATS.NORTH && this.props.amIDummy))
+        }
         faceup={this.props.faceup}
         direction='horizontal'
         offsetFromLeft={15*(13-this.props.cardsInHand.length)}
@@ -191,12 +221,19 @@ const mapStateToProps = (state, ownProps) => {
     APIHandReps: state.handsAPIReps,
     amIDummy: (state.gameSettings.declarer === PARTNERS[ownProps.seat]),
     dealer: state.gameSettings.dealer,
+    playHistory: state.playHistory,
+    bidHistory: state.bidHistory,
     faceup: (
       (ownProps.seat === SEATS.SOUTH)
       ||
       (state.gameState === GAMESTATES.PLAYING &&
         state.gameSettings.declarer === PARTNERS[ownProps.seat] &&
         state.playHistory.length > 0
+      )
+      ||
+      (state.gameState === GAMESTATES.PLAYING &&
+        ownProps.seat === SEATS.NORTH &&
+        state.gameSettings.declarer === SEATS.NORTH
       )
     ),
 

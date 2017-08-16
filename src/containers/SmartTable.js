@@ -10,7 +10,7 @@ import {SUITS, RANKS, RANK_VALUE_MAP, SEATS, GAMESTATES} from '../constants/Game
 import { newGame, playCard, finishedTrick, setWhoseTurn,
   clearBoard, incrementWhoseTurn, doBid,
   screenResize, startBidding, finishBidding, startPlaying, finishPlaying,
-  fetchResults,
+  fetchResults, startedTurn, completedTurn,
 } from '../actions/actions';
 import {sortHand} from '../utilfns/HandFns';
 import {getAPIrepr_cards, getAPIrepr_playhistory, getAPIrepr_bidhistory
@@ -30,7 +30,7 @@ class SmartTable extends React.Component {
     const d = new Deck();
     d.shuffle();
     const hands=d.generateHands();
-
+    bridgeEngine.reset();
     this.props.dispatch(newGame( 'N', {
       'N': hands[0],
       'S': hands[1],
@@ -83,6 +83,7 @@ class SmartTable extends React.Component {
   registerValidCardPlay(card, seat) {
     console.log('SmartTable::registerValidCardPlay: received validated card to play from', seat);
     bridgeEngine.playCard(card, seat);
+
     if (bridgeEngine.isTrickOver()) {
       const winner = bridgeEngine.getRoundWinner();
       bridgeEngine.clearTrick();
@@ -94,15 +95,18 @@ class SmartTable extends React.Component {
         this.props.dispatch(finishPlaying());
         this.sleep(10).then(()=> {
           this.props.dispatch(fetchResults(this.getresultsurl()));
+          this.props.dispatch(completedTurn(seat));
         });
 
       }
       else {
         this.props.dispatch(setWhoseTurn(winner));
+        this.props.dispatch(completedTurn(seat));
       }
     }
     else {
       this.props.dispatch(incrementWhoseTurn());
+      this.props.dispatch(completedTurn(seat));
     }
   }
   registerValidBid(bid, seat) {
@@ -115,11 +119,12 @@ class SmartTable extends React.Component {
         level: contract.level
       }));
       this.props.dispatch(startPlaying());
-      // bridgeEngine.clearBoard(); // can wait until next trick starts to clear..
+      this.props.dispatch(completedTurn(seat));
       console.log('SmartTable::registerValidBid: final bidding contract:', contract);
     }
     else {
       this.props.dispatch(incrementWhoseTurn());
+      this.props.dispatch(completedTurn(seat));
     }
   }
   isValidCardToPlay(card, seat) {
@@ -205,7 +210,6 @@ class SmartTable extends React.Component {
             seat={SEATS.SOUTH}
             bot={false}
             partnerIsBot={true}
-            faceup={true}
             direction={'horizontal'}
             registerValidCardPlay={this.registerValidCardPlay}
             registerValidBid={this.registerValidBid}

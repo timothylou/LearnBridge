@@ -35,12 +35,31 @@ export const NEW_GAME = 'NEW_GAME';
 export const FINISHED_TRICK = 'FINISHED_TRICK';
 export const CLEAR_BOARD = 'CLEAR_BOARD';
 export const INCREMENT_WHOSETURN = 'INCREMENT_WHOSETURN';
+export const TURN_START    = 'TURN_START';
+export const TURN_COMPLETE = 'TURN_COMPLETE'; // signifies that current player is completely done with turn
+export const PAUSE_GAME = 'PAUSE_GAME';
+export const ADD_COINS = 'ADD_COINS';
+export const SUB_COINS = 'SUB_COINS';
+export const PURCHASED_ITEM = 'PURCHASED_ITEM';
+export const CHANGE_ACTIVE_CARDBACK = 'CHANGE_ACTIVE_CARDBACK';
+export const CHANGE_ACTIVE_CHARACTER = 'CHANGE_ACTIVE_CHARACTER';
 
 export const newGame = (dealer, hands, vulnerability) => ({
   type: NEW_GAME,
   dealer,
   hands,
   vulnerability
+});
+export const pauseGame = () => ({
+  type: PAUSE_GAME,
+});
+export const startedTurn = (player) => ({
+  type: TURN_START,
+  player
+});
+export const completedTurn = (player) => ({
+  type: TURN_COMPLETE,
+  player
 });
 export const startBidding = () => ({
   type: START_BIDDING,
@@ -114,6 +133,29 @@ export const receiveBotPlayCard = (player, card) => ({
   card // not used rn
 });
 
+export const addCoins = (qty) => ({
+  type: ADD_COINS,
+  qty,
+});
+
+export const subCoins = (qty) => ({
+  type: SUB_COINS,
+  qty,
+});
+
+export const purchasedItem = (itemType, itemID) => ({
+  type: PURCHASED_ITEM,
+  itemType,
+  itemID,
+});
+export const changeActiveCardback = (cardback) => ({
+  type: CHANGE_ACTIVE_CARDBACK,
+  cardback,
+});
+export const changeActiveCharacter = (character) => ({
+  type: CHANGE_ACTIVE_CHARACTER,
+  character,
+});
 // a friggin THUNK action creator!
 export function fetchBotPlayCard (player, url) {
   return function (dispatch)  {
@@ -246,5 +288,18 @@ export function fetchResults(url) { // returns resulting score from NS perspecti
       dispatch(receiveResults(result));
       return result;
     });
+  }
+}
+
+export function safelyPauseGame(nextfn) {
+  return function (dispatch, getState)  {
+    console.log(!getState().turnCompletionStatus.status);
+    if (!getState().turnCompletionStatus.status) {
+      window.setTimeout(dispatch(safelyPauseGame()), 1000);
+    }
+    else {
+      dispatch(pauseGame());
+      nextfn();
+    }
   }
 }

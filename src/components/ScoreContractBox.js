@@ -6,7 +6,11 @@ const ScoreContractBox = ({ scoreNS, scoreEW, contract, declarer }) => {
   strToDisplay = strToDisplay + ' ' + declarer.toUpperCase();
   strToDisplay = strToDisplay + ', ' + 'NS: ' + scoreNS.toString() + ', ' + 'EW: ' + scoreEW.toString();
   return (
-    <div>
+    <div
+      style={{
+        color: '#FFFFFF'
+      }}
+    >
       <h2>
         {strToDisplay}
       </h2>

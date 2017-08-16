@@ -30,7 +30,9 @@ class SmartHand extends React.Component {
             key={card.suit+card.rank}
             onClick={this.onCardClick}
             faceup={this.props.faceup}
+            cardbackToUse={this.props.cardbackToUse}
             direction={this.props.direction}
+            hoverable={this.props.hoverable}
             offsetFromLeft={0}
             imgstyle={{
               width: cardWidth,
@@ -65,6 +67,7 @@ const mapStateToProps = (state, ownProps) => {
     rawcardslist: state.hands[ownProps.seat],
     screenWidth: state.ui.screenWidth,
     screenHeight: state.ui.screenHeight,
+    cardbackToUse: state.activeCardbackID,
   }
 };
 // export default SmartHand;
