@@ -6,18 +6,22 @@ import SmartTable from './SmartTable';
 import { newGame, finishPlaying, changeView,
   pauseGame, safelyPauseGame, addCoins, subCoins } from '../actions/actions';
 import { connect } from 'react-redux';
-import {INGAME_VIEW, HOME_SCREEN, STORE_VIEW} from '../constants/Views';
+import {INGAME_VIEW, HOME_SCREEN, STORE_VIEW,
+  LOG_IN_VIEW, SIGN_UP_VIEW, VERIFY_VIEW
+} from '../constants/Views';
 import {SEATS, BID_TYPES} from '../constants/Game';
 import {bridgeEngine} from '../BridgeGameEngine';
 import BiddingBox from '../components/BiddingBox';
 import BiddingDisplay from '../components/BiddingDisplay';
-import TopNavigatingBar from '../components/TopNavigatingBar';
+import SmartTopNavigatingBar from '../containers/SmartTopNavigatingBar';
 import SmartHomeScreen from './SmartHomeScreen';
 import NormalButton from '../components/NormalButton';
-import CharacterList from '../components/CharacterList';
-import CardbackList from '../components/CardbackList';
-import StoreItemDetail from '../components/StoreItemDetail';
 import SmartGameStore from '../containers/SmartGameStore';
+import SmartLoginPage from '../containers/SmartLoginPage';
+import SmartSignupPage from '../containers/SmartSignupPage';
+import SmartVerifyPage from '../containers/SmartVerifyPage';
+import AccountDropdownMenu from '../components/AccountDropdownMenu';
+import Firebase from '../Firebase';
 
 class ViewController extends Component {
   constructor(props) {
@@ -58,13 +62,13 @@ class ViewController extends Component {
         const cardTableImg = require('../icons/greenbackground.jpg');
         view = (
           <div
-            className="cardtablescreen"
+            className={false ? "cardtablescreen" : ''}
             style={{
-              backgroundImage: `url(${cardTableImg})`,
+              //backgroundImage: `url(${cardTableImg})`,
           }}
           >
             <div>
-              <TopNavigatingBar
+              <SmartTopNavigatingBar
                 onHomeClick={()=>{
                   this.props.dispatch(pauseGame());
                   this.sleep(500).then(()=> {
@@ -72,16 +76,22 @@ class ViewController extends Component {
                   });
                   // this.props.dispatch(safelyPauseGame(()=>{this.props.dispatch(changeView(HOME_SCREEN));}))
                 }}
-                onNumCoinsClick={()=>{this.props.dispatch(addCoins(100));}}
+                onNumCoinsClick={()=>{
+                  this.props.dispatch(addCoins(100));
+                }}
                 numCoins={this.props.coins}
               />
             </div>
-            <div style={{
-              position: 'fixed',
-              top: '6%',
-              width: '100%',
-              height: '94%'
-            }}>
+            <div
+              className="cardtablescreen2"
+              style={{
+                position: 'fixed',
+                top: '5%',
+                width: '100%',
+                height: '95%',
+                backgroundImage: `url(${cardTableImg})`,
+              }}
+            >
               {newgamebutton}
               <SmartTable
                 dealer='N'
@@ -92,13 +102,33 @@ class ViewController extends Component {
       case HOME_SCREEN:
         const img = require('../icons/greenbackground.jpg');
         view = (
-          <div
-            className="homescreen"
-            style={{
-              backgroundImage: `url(${img})`,
-          }}
-          >
-            <SmartHomeScreen/>
+          <div>
+            <div>
+              <SmartTopNavigatingBar
+                onHomeClick={()=>{
+                  this.props.dispatch(changeView(HOME_SCREEN));
+                }}
+                numCoins={this.props.coins}
+                onNumCoinsClick={()=>{
+                  const userDatabasePath = '/users/'+ this.props.userID+'/gamedata';
+                  const numCoins = this.props.coins;
+                  Firebase.database().ref(userDatabasePath).update({numCoins: numCoins+100 });
+                  this.props.dispatch(addCoins(100));
+                }}
+              />
+            </div>
+            <div
+              className="homescreen"
+              style={{
+                // backgroundImage: `url(${img})`,
+                position: 'absolute',
+                height: '5%',
+                top: '5%',
+                background: '#bfeaea',
+              }}
+            >
+              <SmartHomeScreen/>
+            </div>
           </div>
         );
         break;
@@ -106,23 +136,29 @@ class ViewController extends Component {
         view = (
           <div>
             <div style={{
-              position:'fixed',
-              top: 0,
-              left: 0,
+              // position:'absolute',
+              // top: 0,
+              // left: 0,
+              // zIndex: 999,
             }}>
-              <TopNavigatingBar
+              <SmartTopNavigatingBar
                 onHomeClick={()=>{
                   this.props.dispatch(changeView(HOME_SCREEN));
                 }}
                 numCoins={this.props.coins}
-                onNumCoinsClick={()=>{this.props.dispatch(addCoins(100));}}
+                onNumCoinsClick={()=>{
+                  const userDatabasePath = '/users/'+ this.props.userID+'/gamedata';
+                  const numCoins = this.props.coins;
+                  Firebase.database().ref(userDatabasePath).update({numCoins: numCoins+100 });
+                  this.props.dispatch(addCoins(100));
+                }}
               />
             </div>
             <div style={{
               position: 'fixed',
               top: '5%',
               width: '100%',
-              height: '94%',
+              height: '95%',
               border: '3px solid black',
               padding: 0,
               left: 0,
@@ -131,82 +167,61 @@ class ViewController extends Component {
             </div>
           </div>
         );
-        // view = (
-        //   <div>
-        //     <div style={{
-        //       position: 'fixed',
-        //       top: 0,
-        //       left: 0,
-        //     }}>
-        //       <TopNavigatingBar
-        //         onHomeClick={()=>{
-        //           this.props.dispatch(changeView(HOME_SCREEN));
-        //         }}
-        //       />
-        //     </div>
-        //     <div style={{
-        //       position: 'fixed',
-        //       top: '6%',
-        //       left: '1%',
-        //       width: '30%',
-        //       height: '90%',
-        //       border: '3px solid teal',
-        //     }}>
-        //       <StoreItemDetail
-        //         itemType='character'
-        //         itemID='1'
-        //         itemImgExt='png'
-        //       />
-        //     </div>
-        //     <div style={{
-        //       position: 'fixed',
-        //       top: '6%',
-        //       left: '35%',
-        //       width: '55%',
-        //       height: '90%',
-        //       border: '3px solid pink'
-        //     }}>
-        //       <CharacterList
-        //         characters={['alice','bob','alibob','charlie','tim','eric','jonah','eric','asdf','a','a','a','a']}
-        //       />
-        //       <CardbackList
-        //         cardbacks={['Blue','Red','Black','Gold']}
-        //       />
-        //     </div>
-        //   </div>
-        // );
+        break;
+      case LOG_IN_VIEW:
+        view = (
+          <div>
+            <SmartLoginPage/>
+          </div>
+        );
+        break;
+      case SIGN_UP_VIEW:
+        view = (
+          <div>
+            <SmartSignupPage/>
+          </div>
+        );
+        break;
+      case VERIFY_VIEW:
+        view = (
+          <div>
+            <SmartVerifyPage/>
+          </div>
+        );
         break;
       default:
         break;
     }
-
+    // return (
+    //   <SmartVerifyPage/>
+    // );
+    // return (
+    //   <div
+    //     style={{
+    //       position: 'absolute',
+    //       right: '1%',
+    //     }}
+    //   >
+    //     <ImgDropdownMenu>
+    //       <img
+    //         style={{
+    //           width: 48,
+    //           height: 40,
+    //         }}
+    //         src={require('../icons/myaccountbutton.png')}
+    //         onClick={() => {
+    //           console.log("MyAccount button clicked!");
+    //         }}
+    //         alt="blahblahblah"
+    //       />
+    //     </ImgDropdownMenu>
+    //   </div>
+    // )
     return (
       <div>
         {view}
       </div>
     );
-
-
-    // return (
-    //   <SmartHomeScreen/>
-    // );
-    // return (
-    //   <div>
-    //     <div>
-    //       <TopNavigatingBar/>
-    //     </div>
-    //     <div style={{
-    //       position: 'fixed',
-    //       top: '6%',
-    //       width: '100%',
-    //       height: '94%'
-    //     }}>
-    //       {newgamebutton}
-    //       {view}
-    //     </div>
-    //   </div>
-    // );
-
   }
 }
 
@@ -216,6 +231,7 @@ const mapStateToProps = (state, ownProps) => {
     screenHeight: state.ui.screenHeight,
     screenWidth: state.ui.screenWidth,
     coins: state.coins, // should separate this out later
+    userID: state.userID,
   }
 };
 

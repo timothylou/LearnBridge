@@ -14,14 +14,15 @@ import {
   TURN_START, TURN_COMPLETE,
   ADD_COINS, SUB_COINS,
   PURCHASED_ITEM,
-  CHANGE_ACTIVE_CARDBACK, CHANGE_ACTIVE_CHARACTER
+  CHANGE_ACTIVE_CARDBACK, CHANGE_ACTIVE_CHARACTER,
+  LOG_IN, SET_USER_DETAILS
 } from '../actions/actions';
 import {
   getAPIrepr_cards
 } from '../utilfns/APIFns';
 import { sortHand } from '../utilfns/HandFns';
 import {
-  INGAME_VIEW, HOME_SCREEN,
+  INGAME_VIEW, HOME_SCREEN, LOG_IN_VIEW, SIGN_UP_VIEW, VERIFY_VIEW,
 } from '../constants/Views';
 import {BID_TYPES, BID_SUITS, SEATS, GAMESTATES} from '../constants/Game';
 import {bridgeEngine} from '../BridgeGameEngine';
@@ -236,7 +237,7 @@ function isFetchingResults(state={status:false,score:0,perspective:'NS'}, action
 const initialUIState = {
   screenWidth: typeof window === 'object' ? window.innerWidth : null,
   screenHeight: typeof window === 'object' ? window.innerHeight : null,
-  currentView: HOME_SCREEN,
+  currentView: LOG_IN_VIEW,
 };
 function uiReducer(state = initialUIState, action) {
   switch(action.type) {
@@ -276,6 +277,8 @@ function coins(state=0, action) {
       return state + action.qty;
     case SUB_COINS:
       return (state >= action.qty) ? (state - action.qty) : 0;
+    case SET_USER_DETAILS:
+      return action.coins;
     default:
       return state;
   }
@@ -289,6 +292,11 @@ function purchasedItems(state={cardback: [], character: []}, action) {
           action.itemID
         ]
       });
+    case SET_USER_DETAILS:
+      return {
+        cardback: action.purchasedItems.cardbacks,
+        character: action.purchasedItems.characters,
+      };
     default:
       return state;
   }
@@ -297,6 +305,8 @@ function activeCardbackID(state='Blue', action) {
   switch (action.type) {
     case CHANGE_ACTIVE_CARDBACK:
       return action.cardback;
+    case SET_USER_DETAILS:
+      return action.activeItems.activeCardbackID;
     default:
       return state;
   }
@@ -305,6 +315,8 @@ function activeCharacterID(state='1', action) {
   switch (action.type) {
     case CHANGE_ACTIVE_CHARACTER:
       return action.character;
+    case SET_USER_DETAILS:
+      return action.activeItems.activeCharacterID;
     default:
       return state;
   }
@@ -341,6 +353,15 @@ function gameSettings(state = {}, action) {
   }
 }
 
+function userID(state='', action) {
+  switch (action.type) {
+    case LOG_IN:
+      return action.userID;
+    default:
+      return state;
+  }
+}
+
 const rootReducer = combineReducers({
   ui: uiReducer,
   hands,
@@ -361,6 +382,7 @@ const rootReducer = combineReducers({
   purchasedItems,
   activeCardbackID,
   activeCharacterID,
+  userID,
 });
 
 export default rootReducer;

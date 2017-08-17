@@ -274,6 +274,7 @@ class SmartTable extends React.Component {
           height: '30%',
           width: '20%',
           border: '3px solid #FF0000',
+          fontFamily: 'Arial',
         }}>
           {(this.props.gameState === GAMESTATES.PLAYING) && <CardsOnTable
             cardlist={this.props.cardsOnTable}
@@ -321,9 +322,11 @@ class SmartTable extends React.Component {
           position: 'absolute',
           right: "1%",
           top : "1%",
-          border: '3px solid green',
+          // border: '3px solid green',
         }}>
-          <GameStatusBox/>
+          <GameStatusBox
+            dealer={this.props.dealer}
+          />
           {(this.props.gameState === GAMESTATES.PLAYING) &&
             <BiddingDisplay
               bidHistory={this.props.bidHistory}

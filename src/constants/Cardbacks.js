@@ -23,4 +23,10 @@ export const CARDBACKS_DETAILS_LIST = [
     description: 'Play with care.',
     price: 1000,
   },
+  {
+    name: 'Sapphire',
+    id: 'BlueGold',
+    description: 'Relics of the earliest bridge players.',
+    price: 2400,
+  }
 ];

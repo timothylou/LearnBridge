@@ -2,6 +2,7 @@ import {BID_TYPES, BID_SUITS} from '../constants/Game';
 import {
   INGAME_VIEW, HOME_SCREEN,
 } from '../constants/Views';
+import Firebase from '../Firebase';
 
 /* UI actions */
 export const SCREEN_RESIZE = 'SCREEN_RESIZE';
@@ -15,6 +16,126 @@ export const screenResize = (width, height) => ({
 export const changeView = (nextView) => ({
   type: CHANGE_VIEW,
   nextView,
+});
+
+/* User state actions */
+export const LOG_IN = 'LOG_IN';
+export const SET_USER_DETAILS = 'SET_USER_DETAILS';
+
+export const logIn = (userID) => ({
+  type: LOG_IN,
+  userID,
+});
+export const setUserDetails = (userID, coins, purchasedItems, stats, activeItems)=> ({
+  type: SET_USER_DETAILS,
+  userID,
+  coins,
+  purchasedItems,
+  stats,
+  activeItems,
+});
+
+export function loadAndSetUserDetails(userID) {
+  return function (dispatch, getState) {
+    const userDatabasePath = '/users/' + userID + '/gamedata';
+    return Firebase.database().ref(userDatabasePath).once('value').then((snapshot)=>{
+      const numCoins = snapshot.val().numCoins;
+      const exp = snapshot.val().exp;
+      const level = snapshot.val().level;
+      let activeCardback = snapshot.val().activeCardback;
+      let activeCharacter = snapshot.val().activeCharacter;
+      let cardbacks = snapshot.val().cardbacks;
+      let characters = snapshot.val().characters;
+      if (typeof cardbacks == 'undefined' || cardbacks === 0)
+        cardbacks = [];
+      else
+        cardbacks = Object.keys(cardbacks);
+      if (typeof characters == 'undefined' || characters === 0)
+        characters = [];
+      else
+        characters = Object.keys(characters);
+      console.log('*',numCoins, '*', exp,'*',level,'*', cardbacks, '*',characters,'*');
+      dispatch(setUserDetails(userID, numCoins, {
+        characters: characters,
+        cardbacks: cardbacks,
+      }, {
+        level: level,
+        exp: exp,
+      }, {
+        activeCardbackID: activeCardback,
+        activeCharacterID: activeCharacter,
+      }));
+    }).catch((error) => {
+      console.log("Fetch from Firebase DB failed:", error.message);
+    })
+  }
+}
+
+//
+//     dispatch(requestResults());
+//     let result;
+//     console.log(url);
+//     return fetch(url).then(
+//       response => response.text(),
+//       error => console.log('An error occurred.', error)
+//     )
+//     .then(text => {
+//       console.log(text);
+//       const retxml = text;
+//       const parser = new DOMParser();
+//       const xmlDoc = parser.parseFromString(retxml,"text/xml");
+//       const rets = xmlDoc.getElementsByTagName("r");
+//       let rawResults = "";
+//       for (let i=0; i < rets.length; i++) {
+//         if (rets[i].getAttribute('type') === 'result') {
+//           rawResults = rets[i].getAttribute('result');
+//           console.log("fetchResults dispatch: fetched result: " + rawResults);
+//         }
+//       }
+//       if (rawResults === "") {
+//         console.log("fetchResults dispatch: something went wrong.");
+//         return;
+//       }
+//       if (rawResults.substring(0,3) === 'N/S')
+//         result = parseInt(rawResults.substring(4,rawResults.length));
+//       else if (rawResults.substring(0,3) === 'E/W')
+//         result = -1*parseInt(rawResults.substring(4,rawResults.length));
+//       else throw 'not recognized result??';
+//       dispatch(receiveResults(result));
+//       return result;
+//     });
+//   }
+// }
+
+/* Game store actions */
+export const ADD_COINS = 'ADD_COINS';
+export const SUB_COINS = 'SUB_COINS';
+export const PURCHASED_ITEM = 'PURCHASED_ITEM';
+export const CHANGE_ACTIVE_CARDBACK = 'CHANGE_ACTIVE_CARDBACK';
+export const CHANGE_ACTIVE_CHARACTER = 'CHANGE_ACTIVE_CHARACTER';
+
+export const addCoins = (qty) => ({
+  type: ADD_COINS,
+  qty,
+});
+
+export const subCoins = (qty) => ({
+  type: SUB_COINS,
+  qty,
+});
+
+export const purchasedItem = (itemType, itemID) => ({
+  type: PURCHASED_ITEM,
+  itemType,
+  itemID,
+});
+export const changeActiveCardback = (cardback) => ({
+  type: CHANGE_ACTIVE_CARDBACK,
+  cardback,
+});
+export const changeActiveCharacter = (character) => ({
+  type: CHANGE_ACTIVE_CHARACTER,
+  character,
 });
 
 /* Gameplay actions */
@@ -38,11 +159,7 @@ export const INCREMENT_WHOSETURN = 'INCREMENT_WHOSETURN';
 export const TURN_START    = 'TURN_START';
 export const TURN_COMPLETE = 'TURN_COMPLETE'; // signifies that current player is completely done with turn
 export const PAUSE_GAME = 'PAUSE_GAME';
-export const ADD_COINS = 'ADD_COINS';
-export const SUB_COINS = 'SUB_COINS';
-export const PURCHASED_ITEM = 'PURCHASED_ITEM';
-export const CHANGE_ACTIVE_CARDBACK = 'CHANGE_ACTIVE_CARDBACK';
-export const CHANGE_ACTIVE_CHARACTER = 'CHANGE_ACTIVE_CHARACTER';
+
 
 export const newGame = (dealer, hands, vulnerability) => ({
   type: NEW_GAME,
@@ -133,29 +250,7 @@ export const receiveBotPlayCard = (player, card) => ({
   card // not used rn
 });
 
-export const addCoins = (qty) => ({
-  type: ADD_COINS,
-  qty,
-});
 
-export const subCoins = (qty) => ({
-  type: SUB_COINS,
-  qty,
-});
-
-export const purchasedItem = (itemType, itemID) => ({
-  type: PURCHASED_ITEM,
-  itemType,
-  itemID,
-});
-export const changeActiveCardback = (cardback) => ({
-  type: CHANGE_ACTIVE_CARDBACK,
-  cardback,
-});
-export const changeActiveCharacter = (character) => ({
-  type: CHANGE_ACTIVE_CHARACTER,
-  character,
-});
 // a friggin THUNK action creator!
 export function fetchBotPlayCard (player, url) {
   return function (dispatch)  {
