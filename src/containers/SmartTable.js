@@ -25,6 +25,7 @@ class SmartTable extends React.Component {
     console.log('SmartTable constructor called!');
     this.state = {
       wwidth: '0', wheight: '0',
+      allPassFlag: false,
     };
 
     const d = new Deck();
@@ -111,8 +112,16 @@ class SmartTable extends React.Component {
   }
   registerValidBid(bid, seat) {
     console.log('SmartTable::registerValidBid: received validated bid from', seat);
+    if (this.state.allPassFlag) { // reset from previous rounds if necessary
+      this.setState({allPassFlag: false});
+    }
     if (bridgeEngine.isBiddingComplete()) {
       const contract = bridgeEngine.getContract();
+      if (contract.suit === 'pass') {
+        this.props.dispatch(finishPlaying());
+        this.setState({ allPassFlag: true });
+        return;
+      }
       bridgeEngine.setTrumpSuit(contract.suit);
       this.props.dispatch(finishBidding(contract.declarer, {
         suit: contract.suit,
@@ -180,7 +189,7 @@ class SmartTable extends React.Component {
           marginLeft: -(cardWidth+cardWidth/5*12)/2,
           height: cardHeight+10,
           width: (cardWidth+cardWidth/5*12)+6,
-          border: '3px solid #FF0000',
+          // border: '3px solid #FF0000',
         }}>
           <SmartPlayer
             trumpSuit='h'
@@ -203,7 +212,7 @@ class SmartTable extends React.Component {
           height: cardHeight+10,
           width: (cardWidth+cardWidth/5*12)+6,
           marginLeft: -(cardWidth+cardWidth/5*12)/2,
-          border: '3px solid #FF0000',
+          // border: '3px solid #FF0000',
         }}>
           <SmartPlayer
             trumpSuit='h'
@@ -226,7 +235,7 @@ class SmartTable extends React.Component {
           height: cardHeight+10,
           width: (cardWidth+cardWidth/5*12)+6,
           marginTop: -(cardHeight)/2,
-          border: '3px solid #FF0000',
+          // border: '3px solid #FF0000',
           transform: 'rotate(0deg)',
         }}>
           <SmartPlayer
@@ -250,7 +259,7 @@ class SmartTable extends React.Component {
           height: cardHeight+10,
           width: (cardWidth+cardWidth/5*12)+6,
           marginTop: -(cardHeight)/2,
-          border: '3px solid #FF0000',
+          // border: '3px solid #FF0000',
           transform: 'rotate(0deg)',
         }}>
           <SmartPlayer
@@ -273,7 +282,8 @@ class SmartTable extends React.Component {
           top: '35%',
           height: '30%',
           width: '20%',
-          border: '3px solid #FF0000',
+          // border: '3px solid #FF0000',
+          fontFamily: 'Arial',
         }}>
           {(this.props.gameState === GAMESTATES.PLAYING) && <CardsOnTable
             cardlist={this.props.cardsOnTable}
@@ -286,6 +296,7 @@ class SmartTable extends React.Component {
             />}
           {(this.props.gameState === GAMESTATES.RESULTS) &&
             <ResultsDisplay
+              allPass={this.state.allPassFlag}
               score={this.props.score}
               stillfetching={this.props.isFetchingScore}
             />}
@@ -321,9 +332,11 @@ class SmartTable extends React.Component {
           position: 'absolute',
           right: "1%",
           top : "1%",
-          border: '3px solid green',
+          // border: '3px solid green',
         }}>
-          <GameStatusBox/>
+          <GameStatusBox
+            dealer={this.props.dealer}
+          />
           {(this.props.gameState === GAMESTATES.PLAYING) &&
             <BiddingDisplay
               bidHistory={this.props.bidHistory}

@@ -63,7 +63,7 @@ export default class BridgeBiddingEngine {
           this.bidHistory[historylen-2].bid.type === BT.PASS &&
           this.bidHistory[historylen-3].bid.type === BT.PASS) {
         if (this.prevSuitBid.bidder !== '') return true;
-        else if (historylen === 4 && this.bidHistory[historylen-4].bid.type === BT.PASS)
+        else if (historylen === 4 && this.bidHistory[historylen-4].bid.type === BT.PASS) // all pass
           return true;
       }
     }

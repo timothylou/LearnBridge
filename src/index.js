@@ -6,6 +6,7 @@ import {Provider} from 'react-redux';
 import reducer from './reducers/reducers';
 import logger from 'redux-logger';
 import thunk from 'redux-thunk';
+import 'bootstrap/dist/css/bootstrap.css';
 
 const store=createStore(
   reducer,

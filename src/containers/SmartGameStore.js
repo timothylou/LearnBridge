@@ -8,6 +8,7 @@ import {CARDBACKS_DETAILS_LIST} from '../constants/Cardbacks';
 import {addCoins, subCoins, purchasedItem,
   changeActiveCardback, changeActiveCharacter,
 } from '../actions/actions';
+import Firebase from '../Firebase';
 
 const getItemAttr = (itemType, itemID, attr) => {
   if (itemType === 'character') {
@@ -51,12 +52,17 @@ class SmartGameStore extends React.Component {
     });
   }
   onActivateItemClick(itemType, itemID) {
+    let userDatabasePath;
     switch (itemType) {
       case 'character':
         this.props.dispatch(changeActiveCharacter(itemID));
+        userDatabasePath = '/users/'+ this.props.userID+'/gamedata';
+        Firebase.database().ref(userDatabasePath).update({activeCharacter: itemID });
         break;
       case 'cardback':
         this.props.dispatch(changeActiveCardback(itemID));
+        userDatabasePath = '/users/'+ this.props.userID+'/gamedata';
+        Firebase.database().ref(userDatabasePath).update({activeCardback: itemID });
         break;
       default:
         console.log('what');
@@ -72,6 +78,25 @@ class SmartGameStore extends React.Component {
     return false;
   }
   onPurchaseItemClick(itemType, itemID, purchasePrice) {
+    const userDatabasePath = '/users/'+ this.props.userID+'/gamedata';
+    const numCoins = this.props.coins;
+    Firebase.database().ref(userDatabasePath).update({numCoins: numCoins-purchasePrice });
+    let itemsPath = '/users/' + this.props.userID+'/gamedata';
+    if (itemType === 'character') {
+      itemsPath += '/characters';
+    }
+    else if (itemType === 'cardback') {
+      itemsPath += '/cardbacks';
+    }
+    // let newItemKey = Firebase.database().ref(itemsPath).push().key;
+    // Firebase.database().ref(itemsPath+'/'+newItemKey).update({
+    //   itemID: itemID,
+    //   active: false,
+    // });
+    Firebase.database().ref(itemsPath+'/'+itemID).update({
+      placeholder: "blah",
+    });
+
     this.props.dispatch(subCoins(purchasePrice));
     this.props.dispatch(purchasedItem(itemType, itemID));
   }
@@ -86,6 +111,7 @@ class SmartGameStore extends React.Component {
   render() {
     return (
       <div style={{
+        position: 'absolute',
         width: '100%',
         height: '100%',
         backgroundColor: '#bfeaea',
@@ -139,6 +165,7 @@ const mapStateToProps = (state, ownProps) => {
     purchasedItems: state.purchasedItems,
     activeCardbackID: state.activeCardbackID,
     activeCharacterID: state.activeCharacterID,
+    userID: state.userID,
   }
 }
 export default connect(mapStateToProps)(SmartGameStore);

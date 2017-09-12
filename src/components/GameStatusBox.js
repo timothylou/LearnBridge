@@ -8,7 +8,7 @@ const GameStatusBox = ({ timeElapsed, dealer, vuln, handNumber }) => {
         color: '#FFFFFF'
       }}
     >
-      GameStatusBox placeholder
+      <p>Dealer: {dealer}</p>
     </div>
   )
 };

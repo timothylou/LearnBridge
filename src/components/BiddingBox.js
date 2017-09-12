@@ -16,8 +16,13 @@ const compareSuitBids = (bid1, bid2) => {
   return 0;
 }
 
-const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick, grayAll }) => {
+const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid,
+  onBidClick, grayAll, windowHeight, windowWidth }) => {
   let buttonTable = [];
+  let sizeExt = '';
+  console.log("***************", windowHeight, windowWidth);
+  if (windowHeight < 800)
+    sizeExt = '2';
   for (let i=1; i<=7; i++) {
     buttonTable.push(
       <tr key={i}>
@@ -27,7 +32,7 @@ const BiddingBox = ({ lastLevelBid, isDblValid, isRdblValid, onBidClick, grayAll
               <button
                 className={
                   (compareSuitBids(lastLevelBid, {level: i, suit: elem}) < 0 && !grayAll) ?
-                  "clickableLevelBidButton" : "invalidUnclickableLevelBidButton"
+                  "clickableLevelBidButton"+sizeExt : "invalidUnclickableLevelBidButton"+sizeExt
                 }
                 onClick={() => {
                   console.log("BiddingBox:",i,elem);
