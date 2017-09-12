@@ -26,6 +26,8 @@ class SmartBiddingBox extends React.Component {
         isRdblValid={this.props.isRdblValid}
         grayAll={!this.props.isMyTurn}
         onBidClick={this.onBidClick}
+        windowWidth={this.props.windowWidth}
+        windowHeight={this.props.windowHeight}
       />
     );
   }
@@ -37,6 +39,8 @@ const mapStateToProps = (state, ownProps) => {
     lastSuitBid: state.biddingBoxHelpers.lastSuitBid,
     isDblValid: state.biddingBoxHelpers.isDblValid,
     isRdblValid: state.biddingBoxHelpers.isRdblValid,
+    windowWidth: state.ui.screenWidth,
+    windowHeight: state.ui.screenHeight,
     //isMyTurn: state.whoseTurn === ownProps.seat,
   }
 };

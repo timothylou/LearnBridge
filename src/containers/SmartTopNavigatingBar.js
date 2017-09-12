@@ -28,12 +28,24 @@ class SmartTopNavigatingBar extends React.Component {
       backgroundColor: '#ffe4c4',
       ...this.props.divstyle
     };
-    const _homebuttonstyle = {
+    const _homebuttonstyle = this.props.windowHeight < 800 ?
+    {
+      width: 30,
+      height: 30,
+      ...this.props.homebuttonstyle
+    }:
+    {
       width: 40,
       height: 40,
       ...this.props.homebuttonstyle
     };
-    const _myaccountbuttonstyle = {
+    const _myaccountbuttonstyle = this.props.windowHeight < 800 ?
+    {
+      width: 36,
+      height: 30,
+      ...this.props.homebuttonstyle
+    }:
+    {
       width: 48,
       height: 40,
       ...this.props.homebuttonstyle
@@ -117,6 +129,8 @@ class SmartTopNavigatingBar extends React.Component {
 const mapStateToProps = (state, ownProps) => {
   return {
     currentView: state.ui.currentView,
+    windowHeight: state.ui.screenHeight,
+    windowWidth: state.ui.screenWidth,
   }
 };
 export default connect(mapStateToProps)(SmartTopNavigatingBar);
